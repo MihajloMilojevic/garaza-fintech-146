@@ -72,30 +72,33 @@ All sourced from real public data:
 
 The dynamic threshold lowers the block threshold for high-risk accounts and raises it for low-risk ones, reducing false positives without sacrificing recall.
 
-| Metric | Static (75/50) | Dynamic (risk-adjusted) |
+| Metric | Static (threshold=65) | Dynamic (risk-adjusted) |
 |---|---|---|
-| Precision | 0.566 | **0.630** |
+| Precision | 0.434 | **0.628** |
 | Recall | 1.000 | 1.000 |
-| F1 | 0.723 | **0.773** |
-| False positives | 1,350 | **1,034** |
+| F1 | 0.605 | **0.772** |
+| False positives | 2,301 | **1,043** |
 
-Verdicts differ in **1,639 of 39,938 decisions (4.1%)**.
+Verdicts differ in **3,266 of 39,938 decisions (8.2%)**.
+
+The dynamic model uses a risk-adjustment coefficient of 0.5, so a low-risk account (score=10) has a block threshold of 95 — almost never triggered — while a high-risk account (score=90) has a block threshold of 55. Static ignores all of this context.
 
 ---
 
 ## XGBoost first pass
 
-Trained on account-level screening results (20,000 rows) using risk score components + threshold features as inputs and `verdict_ground_truth` as label.
+Trained on account-level screening results (20,000 rows). Features are restricted to observable pre-verdict signals — account attributes, risk score components, and screening outputs. Label-proxy columns (`hops_to_sanctioned`, `name_match_type_enc`, threshold verdicts) are excluded so the model must genuinely learn from risk signals rather than the labelling rule itself.
 
 | Model | CV metric | Score |
 |---|---|---|
-| Binary (BLOCK vs not-BLOCK) | ROC-AUC (5-fold) | **1.0000 ± 0.0000** |
-| Binary | F1-BLOCK (5-fold) | **1.0000 ± 0.0000** |
-| Multiclass (BLOCK/REVIEW/CLEAR) | Macro-F1 (5-fold) | **0.9998 ± 0.0004** |
+| Binary (BLOCK vs not-BLOCK) | ROC-AUC (5-fold) | **0.9999 ± 0.0001** |
+| Binary | F1-BLOCK (5-fold) | **0.9610 ± 0.0372** |
+| Multiclass (BLOCK/REVIEW/CLEAR) | Macro-F1 (5-fold) | **0.9964 ± 0.0066** |
 
-**Learnability: PASS.** Perfect CV scores are expected for a synthetic dataset where labels are derived deterministically from the features — they confirm no contradictions or label bugs. For a realistic evaluation, introduce label noise or hold out accounts screened under a different ruleset.
+**Learnability: PASS.**
 
-Top features (binary model): `hops_to_sanctioned` (0.547), `name_match_type_enc` (0.291), `pep_sanctions_risk` (0.154).
+Top features (binary model): `pep_sanctions_risk` (0.838), `match_score` (0.123), `overall_risk_score` (0.025).
+Top features (multiclass model): `overall_risk_score` (0.418), `pep_sanctions_risk` (0.153), `country_risk_score` (0.079).
 
 ---
 
@@ -218,9 +221,9 @@ overall_risk_score = (
 ## Dynamic threshold formula
 
 ```
-risk_adjustment   = (overall_risk_score − 50) × 0.3   # range −15 to +15
-dynamic_t_block  = clamp(75 − risk_adjustment, 40, 90)
-dynamic_t_review = clamp(50 − risk_adjustment, 25, 65)
+risk_adjustment   = (overall_risk_score − 50) × 0.5   # range −25 to +25
+dynamic_t_block  = clamp(75 − risk_adjustment, 40, 95)
+dynamic_t_review = clamp(50 − risk_adjustment, 20, 70)
 ```
 
-High-risk accounts get a lower block threshold (more sensitive); low-risk accounts get a higher one (fewer false positives).
+High-risk accounts get a lower block threshold (more sensitive); low-risk accounts get a higher one (fewer false positives). Examples at coefficient 0.5: score=10 → t_block=95, score=50 → t_block=75, score=90 → t_block=55.

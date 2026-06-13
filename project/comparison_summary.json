@@ -1,0 +1,88 @@
+{
+  "generated_at": "2026-06-13T23:31:26",
+  "dataset_summary": {
+    "row_counts": {
+      "accounts": 20000,
+      "account_relationships": 13088,
+      "wallets": 3379,
+      "transactions": 199387,
+      "screening_results": 39938,
+      "risk_scores": 20000,
+      "threshold_decisions": 39938,
+      "explanatory_logs": 3378
+    },
+    "verdict_dist": {
+      "BLOCK": 1763,
+      "CLEAR": 30257,
+      "REVIEW": 7918
+    },
+    "total_sr": 39938,
+    "sources": {
+      "sanctioned_entities": "real",
+      "peps": "real",
+      "matching_pairs": "real",
+      "aml_shape": "real",
+      "relationships": "real_ftm"
+    }
+  },
+  "threshold_comparison": {
+    "total_decisions": 39938,
+    "verdicts_differ_count": 1639,
+    "verdicts_differ_pct": 4.1,
+    "confusion_matrix": {
+      "CLEAR_static_CLEAR_dynamic": 33119,
+      "REVIEW_static_REVIEW_dynamic": 2397,
+      "BLOCK_static_BLOCK_dynamic": 2783,
+      "BLOCK_static_REVIEW_dynamic": 330,
+      "REVIEW_static_CLEAR_dynamic": 1282,
+      "REVIEW_static_BLOCK_dynamic": 14,
+      "CLEAR_static_REVIEW_dynamic": 13
+    },
+    "static_tp": 1763,
+    "static_fp": 1350,
+    "static_fn": 0,
+    "static_tn": 36825,
+    "static_precision": 0.5663,
+    "static_recall": 1.0,
+    "static_f1": 0.7231,
+    "dynamic_tp": 1763,
+    "dynamic_fp": 1034,
+    "dynamic_fn": 0,
+    "dynamic_tn": 37141,
+    "dynamic_precision": 0.6303,
+    "dynamic_recall": 1.0,
+    "dynamic_f1": 0.7732
+  },
+  "risk_distribution": {
+    "band_counts": {
+      "CRITICAL": 201,
+      "HIGH": 38,
+      "LOW": 19253,
+      "MEDIUM": 508
+    },
+    "overall_mean": 19.0415,
+    "overall_std": 10.3284,
+    "by_account_type": {
+      "individual": {
+        "count": 14180,
+        "mean": 17.7437,
+        "std": 7.1408
+      },
+      "business": {
+        "count": 5820,
+        "mean": 22.2033,
+        "std": 15.1089
+      }
+    }
+  },
+  "key_metrics": {
+    "static_precision": 0.5663,
+    "static_recall": 1.0,
+    "static_f1": 0.7231,
+    "dynamic_precision": 0.6303,
+    "dynamic_recall": 1.0,
+    "dynamic_f1": 0.7732,
+    "verdicts_differ_count": 1639,
+    "verdicts_differ_pct": 4.1
+  }
+}

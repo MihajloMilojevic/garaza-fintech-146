@@ -1,0 +1,18 @@
+{
+  "positive_mean": 0.6618,
+  "positive_std": 0.3201,
+  "positive_p5": 0.0,
+  "positive_p25": 0.3849,
+  "positive_p50": 0.7213,
+  "positive_p75": 1.0,
+  "positive_p95": 1.0,
+  "positive_count": 85144,
+  "negative_mean": 0.6768,
+  "negative_std": 0.2218,
+  "negative_p5": 0.3636,
+  "negative_p25": 0.5632,
+  "negative_p50": 0.71,
+  "negative_p75": 0.8439,
+  "negative_p95": 0.9638,
+  "negative_count": 11820
+}

@@ -1,0 +1,12 @@
+{
+  "burst_txn_per_day": {
+    "mean": 38.6,
+    "std": 35.09
+  },
+  "burst_amount_escalation": {
+    "mean_amount": 2577800.71,
+    "median_amount": 10475.35,
+    "p95_amount": 627559.82,
+    "laundering_txn_count": 193
+  }
+}

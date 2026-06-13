@@ -1,0 +1,227 @@
+country_code,country_name,basel_aml_score,fatf_status,ofac_sanctioned_country,region,composite_risk_score
+FI,Finland,1.5,clean,0,Europe,4.5
+NO,Norway,1.6,clean,0,Europe,4.8
+SE,Sweden,1.7,clean,0,Europe,5.1
+DK,Denmark,1.8,clean,0,Europe,5.4
+LU,Luxembourg,2.0,clean,0,Europe,6.0
+NZ,New Zealand,2.1,clean,0,Oceania,6.3
+CH,Switzerland,2.2,clean,0,Europe,6.6
+NL,Netherlands,2.3,clean,0,Europe,6.9
+DE,Germany,2.4,clean,0,Europe,7.2
+SG,Singapore,2.5,clean,0,Asia,7.5
+AU,Australia,2.6,clean,0,Oceania,7.8
+CA,Canada,2.7,clean,0,North America,8.1
+JP,Japan,2.8,clean,0,Asia,8.4
+AT,Austria,2.9,clean,0,Europe,8.7
+GB,United Kingdom,3.0,clean,0,Europe,9.0
+US,United States,3.1,clean,0,North America,9.3
+FR,France,3.2,clean,0,Europe,9.6
+IE,Ireland,3.3,clean,0,Europe,9.9
+BE,Belgium,3.4,clean,0,Europe,10.2
+IS,Iceland,3.5,clean,0,Europe,10.5
+LI,Liechtenstein,3.5,clean,0,Europe,10.5
+SM,San Marino,3.5,clean,0,Europe,10.5
+KR,South Korea,3.6,clean,0,Asia,10.8
+IL,Israel,3.8,clean,0,Middle East,11.4
+PT,Portugal,3.9,clean,0,Europe,11.7
+ES,Spain,4.0,clean,0,Europe,12.0
+IT,Italy,4.1,clean,0,Europe,12.3
+CZ,Czech Republic,4.2,clean,0,Europe,12.6
+SK,Slovakia,4.3,clean,0,Europe,12.9
+SI,Slovenia,4.4,clean,0,Europe,13.2
+EE,Estonia,4.5,clean,0,Europe,13.5
+LV,Latvia,4.6,clean,0,Europe,13.8
+LT,Lithuania,4.7,clean,0,Europe,14.1
+PL,Poland,4.8,clean,0,Europe,14.4
+HU,Hungary,5.0,clean,0,Europe,15.0
+RO,Romania,5.2,clean,0,Europe,15.6
+BG,Bulgaria,5.4,clean,0,Europe,16.2
+HK,Hong Kong,4.0,clean,0,Asia,12.0
+TW,Taiwan,3.8,clean,0,Asia,11.4
+MT,Malta,4.5,clean,0,Europe,13.5
+CY,Cyprus,5.0,clean,0,Europe,15.0
+GR,Greece,5.0,clean,0,Europe,15.0
+MC,Monaco,4.8,grey,0,Europe,32.4
+AE,United Arab Emirates,5.5,clean,0,Middle East,16.5
+SA,Saudi Arabia,5.5,clean,0,Middle East,16.5
+QA,Qatar,5.3,clean,0,Middle East,15.9
+BH,Bahrain,5.4,clean,0,Middle East,16.2
+KW,Kuwait,5.6,clean,0,Middle East,16.8
+OM,Oman,5.7,clean,0,Middle East,17.1
+JO,Jordan,5.8,clean,0,Middle East,17.4
+LB,Lebanon,7.2,clean,0,Middle East,21.6
+TR,Turkey,6.0,clean,0,Europe,18.0
+UA,Ukraine,6.5,clean,0,Europe,19.5
+RS,Serbia,5.8,clean,0,Europe,17.4
+BA,Bosnia and Herzegovina,6.0,clean,0,Europe,18.0
+ME,Montenegro,5.9,clean,0,Europe,17.7
+MK,North Macedonia,5.8,clean,0,Europe,17.4
+AL,Albania,6.2,clean,0,Europe,18.6
+MD,Moldova,6.5,clean,0,Europe,19.5
+AM,Armenia,6.3,clean,0,Asia,18.9
+AZ,Azerbaijan,6.5,clean,0,Asia,19.5
+GE,Georgia,5.5,clean,0,Asia,16.5
+KZ,Kazakhstan,6.8,clean,0,Asia,20.4
+UZ,Uzbekistan,7.0,clean,0,Asia,21.0
+TM,Turkmenistan,7.5,clean,0,Asia,22.5
+TJ,Tajikistan,7.2,clean,0,Asia,21.6
+KG,Kyrgyzstan,7.0,clean,0,Asia,21.0
+MN,Mongolia,6.5,clean,0,Asia,19.5
+CN,China,6.0,clean,0,Asia,18.0
+IN,India,5.8,clean,0,Asia,17.4
+PK,Pakistan,7.5,clean,0,Asia,22.5
+BD,Bangladesh,7.0,clean,0,Asia,21.0
+LK,Sri Lanka,6.5,clean,0,Asia,19.5
+NP,Nepal,7.2,grey,0,Asia,39.6
+BT,Bhutan,5.5,clean,0,Asia,16.5
+MV,Maldives,5.8,clean,0,Asia,17.4
+AF,Afghanistan,8.5,clean,0,Asia,25.5
+VN,Vietnam,7.0,grey,0,Asia,39.0
+TH,Thailand,6.0,clean,0,Asia,18.0
+MY,Malaysia,5.5,clean,0,Asia,16.5
+ID,Indonesia,5.8,clean,0,Asia,17.4
+PH,Philippines,6.5,grey,0,Asia,37.5
+MM,Myanmar,8.5,black,0,Asia,55.5
+KH,Cambodia,7.5,clean,0,Asia,22.5
+LA,Laos,7.0,clean,0,Asia,21.0
+BN,Brunei,5.0,clean,0,Asia,15.0
+TL,Timor-Leste,6.0,clean,0,Asia,18.0
+PG,Papua New Guinea,6.5,clean,0,Oceania,19.5
+FJ,Fiji,5.8,clean,0,Oceania,17.4
+SB,Solomon Islands,5.5,clean,0,Oceania,16.5
+VU,Vanuatu,6.0,clean,0,Oceania,18.0
+WS,Samoa,5.2,clean,0,Oceania,15.6
+TO,Tonga,5.0,clean,0,Oceania,15.0
+KI,Kiribati,5.0,clean,0,Oceania,15.0
+FM,Micronesia,5.0,clean,0,Oceania,15.0
+MH,Marshall Islands,6.0,clean,0,Oceania,18.0
+PW,Palau,5.5,clean,0,Oceania,16.5
+NR,Nauru,7.0,clean,0,Oceania,21.0
+TV,Tuvalu,5.0,clean,0,Oceania,15.0
+CK,Cook Islands,5.5,clean,0,Oceania,16.5
+NU,Niue,5.0,clean,0,Oceania,15.0
+NC,New Caledonia,4.5,clean,0,Oceania,13.5
+PF,French Polynesia,4.5,clean,0,Oceania,13.5
+TF,French Southern Territories,4.0,clean,0,Oceania,12.0
+AQ,Antarctica,1.0,clean,0,Oceania,3.0
+WF,Wallis and Futuna,4.5,clean,0,Oceania,13.5
+TK,Tokelau,4.0,clean,0,Oceania,12.0
+PN,Pitcairn,4.0,clean,0,Oceania,12.0
+NG,Nigeria,7.2,grey,0,Africa,39.6
+ZA,South Africa,6.5,grey,0,Africa,37.5
+KE,Kenya,6.8,grey,0,Africa,38.4
+EG,Egypt,6.5,clean,0,Africa,19.5
+MA,Morocco,6.0,clean,0,Africa,18.0
+TN,Tunisia,6.2,clean,0,Africa,18.6
+DZ,Algeria,7.0,grey,0,Africa,39.0
+LY,Libya,8.0,clean,0,Africa,24.0
+SD,Sudan,8.5,clean,0,Africa,25.5
+SS,South Sudan,8.8,grey,0,Africa,44.4
+ET,Ethiopia,7.5,grey,0,Africa,40.5
+SO,Somalia,9.0,clean,0,Africa,27.0
+ER,Eritrea,8.0,clean,0,Africa,24.0
+DJ,Djibouti,6.8,clean,0,Africa,20.4
+TZ,Tanzania,7.0,grey,0,Africa,39.0
+UG,Uganda,7.0,clean,0,Africa,21.0
+RW,Rwanda,5.5,clean,0,Africa,16.5
+BI,Burundi,7.5,clean,0,Africa,22.5
+CM,Cameroon,7.2,grey,0,Africa,39.6
+CI,Côte d'Ivoire,6.8,grey,0,Africa,38.4
+SN,Senegal,6.5,grey,0,Africa,37.5
+ML,Mali,7.8,grey,0,Africa,41.4
+BF,Burkina Faso,7.5,grey,0,Africa,40.5
+NE,Niger,7.2,clean,0,Africa,21.6
+TD,Chad,8.0,clean,0,Africa,24.0
+MR,Mauritania,7.0,clean,0,Africa,21.0
+GM,Gambia,6.5,clean,0,Africa,19.5
+GN,Guinea,7.8,clean,0,Africa,23.4
+GW,Guinea-Bissau,8.5,clean,0,Africa,25.5
+SL,Sierra Leone,7.5,clean,0,Africa,22.5
+LR,Liberia,7.2,clean,0,Africa,21.6
+TG,Togo,7.0,clean,0,Africa,21.0
+BJ,Benin,6.8,clean,0,Africa,20.4
+GH,Ghana,6.5,clean,0,Africa,19.5
+NA,Namibia,6.0,grey,0,Africa,36.0
+BW,Botswana,5.5,clean,0,Africa,16.5
+ZW,Zimbabwe,8.0,clean,0,Africa,24.0
+ZM,Zambia,6.8,clean,0,Africa,20.4
+MW,Malawi,6.5,clean,0,Africa,19.5
+MZ,Mozambique,7.0,grey,0,Africa,39.0
+AO,Angola,7.5,grey,0,Africa,40.5
+CD,DRC,8.0,grey,0,Africa,42.0
+CG,Republic of Congo,7.5,clean,0,Africa,22.5
+GA,Gabon,7.0,clean,0,Africa,21.0
+GQ,Equatorial Guinea,7.8,clean,0,Africa,23.4
+CF,Central African Republic,8.5,clean,0,Africa,25.5
+ST,São Tomé and Príncipe,6.0,clean,0,Africa,18.0
+MG,Madagascar,7.0,clean,0,Africa,21.0
+MU,Mauritius,4.5,clean,0,Africa,13.5
+SC,Seychelles,5.5,clean,0,Africa,16.5
+KM,Comoros,7.0,clean,0,Africa,21.0
+CV,Cape Verde,5.8,clean,0,Africa,17.4
+IQ,Iraq,8.2,clean,0,Middle East,24.6
+PS,Palestine,7.0,clean,0,Middle East,21.0
+KP,North Korea,9.5,black,1,Asia,98.5
+IR,Iran,9.2,black,1,Middle East,97.6
+SY,Syria,9.0,clean,1,Middle East,67.0
+CU,Cuba,7.5,clean,1,Caribbean,62.5
+RU,Russia,7.8,clean,1,Europe,63.4
+BY,Belarus,7.2,clean,1,Europe,61.6
+VE,Venezuela,8.0,grey,1,South America,82.0
+BR,Brazil,5.8,clean,0,South America,17.4
+AR,Argentina,6.0,clean,0,South America,18.0
+CL,Chile,4.5,clean,0,South America,13.5
+CO,Colombia,6.5,clean,0,South America,19.5
+PE,Peru,6.2,clean,0,South America,18.6
+EC,Ecuador,6.8,clean,0,South America,20.4
+BO,Bolivia,7.0,clean,0,South America,21.0
+PY,Paraguay,7.2,clean,0,South America,21.6
+UY,Uruguay,4.8,clean,0,South America,14.4
+GY,Guyana,6.5,clean,0,South America,19.5
+SR,Suriname,7.0,clean,0,South America,21.0
+GF,French Guiana,5.5,clean,0,South America,16.5
+FK,Falkland Islands,3.5,clean,0,South America,10.5
+GT,Guatemala,7.0,clean,0,Central America,21.0
+BZ,Belize,6.8,clean,0,Central America,20.4
+HN,Honduras,7.2,clean,0,Central America,21.6
+SV,El Salvador,6.8,clean,0,Central America,20.4
+NI,Nicaragua,7.5,clean,0,Central America,22.5
+CR,Costa Rica,5.5,clean,0,Central America,16.5
+PA,Panama,6.5,clean,0,Central America,19.5
+DO,Dominican Republic,6.0,clean,0,Caribbean,18.0
+JM,Jamaica,6.5,clean,0,Caribbean,19.5
+TT,Trinidad and Tobago,6.8,clean,0,Caribbean,20.4
+HT,Haiti,8.0,grey,0,Caribbean,42.0
+BB,Barbados,5.0,clean,0,Caribbean,15.0
+LC,Saint Lucia,5.5,clean,0,Caribbean,16.5
+VC,Saint Vincent,6.0,clean,0,Caribbean,18.0
+GD,Grenada,5.5,clean,0,Caribbean,16.5
+AG,Antigua and Barbuda,5.8,clean,0,Caribbean,17.4
+DM,Dominica,6.0,clean,0,Caribbean,18.0
+KN,Saint Kitts and Nevis,6.2,clean,0,Caribbean,18.6
+BS,Bahamas,5.5,clean,0,Caribbean,16.5
+TC,Turks and Caicos,5.8,clean,0,Caribbean,17.4
+KY,Cayman Islands,5.0,clean,0,Caribbean,15.0
+BM,Bermuda,4.5,clean,0,Caribbean,13.5
+VG,British Virgin Islands,5.5,clean,0,Caribbean,16.5
+AW,Aruba,5.0,clean,0,Caribbean,15.0
+CW,Curaçao,5.5,clean,0,Caribbean,16.5
+SX,Sint Maarten,5.8,clean,0,Caribbean,17.4
+MF,Saint Martin,5.0,clean,0,Caribbean,15.0
+BL,Saint Barthélemy,4.5,clean,0,Caribbean,13.5
+GP,Guadeloupe,4.5,clean,0,Caribbean,13.5
+MQ,Martinique,4.5,clean,0,Caribbean,13.5
+PR,Puerto Rico,4.5,clean,0,North America,13.5
+VI,US Virgin Islands,4.8,clean,0,North America,14.4
+GU,Guam,4.5,clean,0,North America,13.5
+MP,Northern Mariana Islands,4.5,clean,0,North America,13.5
+AS,American Samoa,4.5,clean,0,North America,13.5
+UM,US Minor Outlying Islands,4.0,clean,0,North America,12.0
+SH,Saint Helena,4.0,clean,0,Other,12.0
+IO,British Indian Ocean Territory,4.0,clean,0,Other,12.0
+YT,Mayotte,5.0,clean,0,Other,15.0
+RE,Réunion,4.5,clean,0,Other,13.5
+PM,Saint Pierre and Miquelon,4.0,clean,0,Other,12.0
+XK,Kosovo,6.0,clean,0,Europe,18.0
+VA,Vatican City,3.5,clean,0,Europe,10.5
+AD,Andorra,3.8,clean,0,Europe,11.4

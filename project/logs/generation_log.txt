@@ -1,0 +1,507 @@
+Started pipeline
+2026-06-14T01:26:42 [INFO] === 00_init_db.py started ===
+2026-06-14T01:26:42 [INFO] Creating/opening database at: /home/mihajlo/Mihajlo/Projekti/garaza/project/sanctions_screening.db
+2026-06-14T01:26:42 [INFO]   [1/8] Creating table: accounts
+2026-06-14T01:26:42 [INFO]     OK — accounts
+2026-06-14T01:26:42 [INFO]   [2/8] Creating table: account_relationships
+2026-06-14T01:26:42 [INFO]     OK — account_relationships
+2026-06-14T01:26:42 [INFO]   [3/8] Creating table: wallets
+2026-06-14T01:26:42 [INFO]     OK — wallets
+2026-06-14T01:26:42 [INFO]   [4/8] Creating table: transactions
+2026-06-14T01:26:42 [INFO]     OK — transactions
+2026-06-14T01:26:42 [INFO]   [5/8] Creating table: screening_results
+2026-06-14T01:26:42 [INFO]     OK — screening_results
+2026-06-14T01:26:42 [INFO]   [6/8] Creating table: risk_scores
+2026-06-14T01:26:42 [INFO]     OK — risk_scores
+2026-06-14T01:26:42 [INFO]   [7/8] Creating table: threshold_decisions
+2026-06-14T01:26:42 [INFO]     OK — threshold_decisions
+2026-06-14T01:26:42 [INFO]   [8/8] Creating table: explanatory_logs
+2026-06-14T01:26:42 [INFO]     OK — explanatory_logs
+2026-06-14T01:26:42 [INFO] All 8 tables confirmed in database.
+2026-06-14T01:26:42 [INFO] Database connection closed.
+2026-06-14T01:26:42 [INFO] progress.json updated: schema_complete=true
+2026-06-14T01:26:42 [INFO] === 00_init_db.py finished successfully ===
+2026-06-14T01:26:46 [INFO] === 01_build_reference_data.py started ===
+2026-06-14T01:26:46 [INFO] Running sub-step A ...
+2026-06-14T01:26:46 [INFO] --- Sub-step A: sanctioned_entities.csv ---
+2026-06-14T01:26:46 [INFO]   Reading /home/mihajlo/Mihajlo/Projekti/garaza/data/raw/sanctions/targets.simple.csv ...
+2026-06-14T01:26:48 [INFO]   Loaded 2463 CryptoWallet rows and 68358 other rows across 204 countries.
+2026-06-14T01:26:48 [INFO]   Final entity count: 8000
+2026-06-14T01:26:48 [INFO]   Written: /home/mihajlo/Mihajlo/Projekti/garaza/project/reference_data/sanctioned_entities.csv
+2026-06-14T01:26:48 [INFO] Sub-step A complete.
+2026-06-14T01:26:48 [INFO] Running sub-step B ...
+2026-06-14T01:26:48 [INFO] --- Sub-step B: sanctioned_relationships.csv ---
+2026-06-14T01:26:48 [INFO]   Known sanctioned entity IDs loaded: 8000
+2026-06-14T01:26:48 [INFO]   Streaming /home/mihajlo/Mihajlo/Projekti/garaza/data/raw/sanctions/entities.ftm.json (time limit: 30 min, line limit: 5,000,000) ...
+2026-06-14T01:26:50 [INFO]   Streamed 284,234 lines, 284,201 objects in 2.0s.
+2026-06-14T01:26:50 [INFO]   Relationships found: 1499
+2026-06-14T01:26:50 [INFO]   Written: /home/mihajlo/Mihajlo/Projekti/garaza/project/reference_data/sanctioned_relationships.csv
+2026-06-14T01:26:50 [INFO] Sub-step B complete.
+2026-06-14T01:26:50 [INFO] Running sub-step C ...
+2026-06-14T01:26:50 [INFO] --- Sub-step C: peps.csv ---
+2026-06-14T01:26:50 [INFO]   Reading /home/mihajlo/Mihajlo/Projekti/garaza/data/raw/peps/targets.simple.csv (may be slow — 192 MB) ...
+2026-06-14T01:26:53 [INFO]   Loaded 754,598 Person rows across 252 countries.
+2026-06-14T01:26:53 [INFO]   Final PEP count: 3000
+2026-06-14T01:26:53 [INFO]   Written: /home/mihajlo/Mihajlo/Projekti/garaza/project/reference_data/peps.csv
+2026-06-14T01:26:53 [INFO] Sub-step C complete.
+2026-06-14T01:26:53 [INFO] Running sub-step D ...
+2026-06-14T01:26:53 [INFO] --- Sub-step D: matching_pairs_summary.csv + matching_pairs_stats.json ---
+2026-06-14T01:26:53 [INFO]   Reading up to 100,000 lines from /home/mihajlo/Mihajlo/Projekti/garaza/data/raw/sanctions/pairs-20251209.json ...
+2026-06-14T01:26:54 [INFO]     Processed 10,000 lines ...
+2026-06-14T01:26:54 [INFO]     Processed 20,000 lines ...
+2026-06-14T01:26:54 [INFO]     Processed 30,000 lines ...
+2026-06-14T01:26:54 [INFO]     Processed 40,000 lines ...
+2026-06-14T01:26:55 [INFO]     Processed 50,000 lines ...
+2026-06-14T01:26:55 [INFO]     Processed 60,000 lines ...
+2026-06-14T01:26:55 [INFO]     Processed 70,000 lines ...
+2026-06-14T01:26:56 [INFO]     Processed 80,000 lines ...
+2026-06-14T01:26:56 [INFO]     Processed 90,000 lines ...
+2026-06-14T01:26:57 [INFO]     Processed 100,000 lines ...
+2026-06-14T01:26:57 [INFO]   Done: 100,001 lines, 85,144 positive, 11,820 negative pairs.
+2026-06-14T01:26:57 [INFO]   Written: /home/mihajlo/Mihajlo/Projekti/garaza/project/reference_data/matching_pairs_summary.csv
+2026-06-14T01:26:57 [INFO]   Written: /home/mihajlo/Mihajlo/Projekti/garaza/project/reference_data/matching_pairs_stats.json
+2026-06-14T01:26:57 [INFO] Sub-step D complete.
+2026-06-14T01:26:57 [INFO] Running sub-step E ...
+2026-06-14T01:26:57 [INFO] --- Sub-step E: aml_transactions_sample.csv ---
+2026-06-14T01:26:57 [INFO]   Reading up to 500,000 rows from /home/mihajlo/Mihajlo/Projekti/garaza/data/raw/keggle/HI-Small_Trans.csv ...
+2026-06-14T01:26:58 [INFO]     100,000 rows processed ...
+2026-06-14T01:26:59 [INFO]     200,000 rows processed ...
+2026-06-14T01:26:59 [INFO]     300,000 rows processed ...
+2026-06-14T01:27:00 [INFO]     400,000 rows processed ...
+2026-06-14T01:27:01 [INFO]     500,000 rows processed ...
+2026-06-14T01:27:01 [INFO]   Done: 500,001 rows read.
+2026-06-14T01:27:01 [INFO]   Written: /home/mihajlo/Mihajlo/Projekti/garaza/project/reference_data/aml_transactions_sample.csv
+2026-06-14T01:27:01 [INFO]   Written: /home/mihajlo/Mihajlo/Projekti/garaza/project/reference_data/aml_hour_dist.csv
+2026-06-14T01:27:01 [INFO]   Written: /home/mihajlo/Mihajlo/Projekti/garaza/project/reference_data/aml_dow_dist.csv
+2026-06-14T01:27:01 [INFO]   Written: /home/mihajlo/Mihajlo/Projekti/garaza/project/reference_data/aml_laundering_velocity.json
+2026-06-14T01:27:01 [INFO] Sub-step E complete.
+2026-06-14T01:27:01 [INFO] Running sub-step F ...
+2026-06-14T01:27:01 [INFO] --- Sub-step F: country_risk.csv ---
+2026-06-14T01:27:01 [INFO]   Written: /home/mihajlo/Mihajlo/Projekti/garaza/project/reference_data/country_risk.csv (226 countries)
+2026-06-14T01:27:01 [INFO] Sub-step F complete.
+2026-06-14T01:27:01 [INFO] progress.json updated: reference_data_complete=true
+2026-06-14T01:27:01 [INFO] === 01_build_reference_data.py finished successfully ===
+2026-06-14T01:27:11 [INFO] === 02_generate_accounts.py started ===
+2026-06-14T01:27:11 [INFO] Batches to generate: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+2026-06-14T01:27:11 [INFO] Accounts already generated: 0
+2026-06-14T01:27:11 [INFO] Loading reference data …
+2026-06-14T01:27:11 [INFO]   sanctioned_entities: 8000 rows
+2026-06-14T01:27:11 [INFO]   peps: 3000 rows
+2026-06-14T01:27:11 [INFO] Building Faker locale pool …
+2026-06-14T01:27:12 [INFO]   14 Faker locales loaded.
+2026-06-14T01:27:12 [INFO] Generating batch 0 (accounts ACC-000001 … ACC-002000) …
+2026-06-14T01:27:12 [INFO]   Batch 0: 2000 generated, 2000 rows inserted.
+2026-06-14T01:27:12 [INFO]   Progress saved: 2000/20000 accounts, batches done: [0]
+2026-06-14T01:27:12 [INFO] Generating batch 1 (accounts ACC-002001 … ACC-004000) …
+2026-06-14T01:27:12 [INFO]   Batch 1: 2000 generated, 2000 rows inserted.
+2026-06-14T01:27:12 [INFO]   Progress saved: 4000/20000 accounts, batches done: [0, 1]
+2026-06-14T01:27:12 [INFO] Generating batch 2 (accounts ACC-004001 … ACC-006000) …
+2026-06-14T01:27:12 [INFO]   Batch 2: 2000 generated, 2000 rows inserted.
+2026-06-14T01:27:12 [INFO]   Progress saved: 6000/20000 accounts, batches done: [0, 1, 2]
+2026-06-14T01:27:12 [INFO] Generating batch 3 (accounts ACC-006001 … ACC-008000) …
+2026-06-14T01:27:12 [INFO]   Batch 3: 2000 generated, 2000 rows inserted.
+2026-06-14T01:27:12 [INFO]   Progress saved: 8000/20000 accounts, batches done: [0, 1, 2, 3]
+2026-06-14T01:27:12 [INFO] Generating batch 4 (accounts ACC-008001 … ACC-010000) …
+2026-06-14T01:27:13 [INFO]   Batch 4: 2000 generated, 2000 rows inserted.
+2026-06-14T01:27:13 [INFO]   Progress saved: 10000/20000 accounts, batches done: [0, 1, 2, 3, 4]
+2026-06-14T01:27:13 [INFO] Generating batch 5 (accounts ACC-010001 … ACC-012000) …
+2026-06-14T01:27:13 [INFO]   Batch 5: 2000 generated, 2000 rows inserted.
+2026-06-14T01:27:13 [INFO]   Progress saved: 12000/20000 accounts, batches done: [0, 1, 2, 3, 4, 5]
+2026-06-14T01:27:13 [INFO] Generating batch 6 (accounts ACC-012001 … ACC-014000) …
+2026-06-14T01:27:13 [INFO]   Batch 6: 2000 generated, 2000 rows inserted.
+2026-06-14T01:27:13 [INFO]   Progress saved: 14000/20000 accounts, batches done: [0, 1, 2, 3, 4, 5, 6]
+2026-06-14T01:27:13 [INFO] Generating batch 7 (accounts ACC-014001 … ACC-016000) …
+2026-06-14T01:27:13 [INFO]   Batch 7: 2000 generated, 2000 rows inserted.
+2026-06-14T01:27:13 [INFO]   Progress saved: 16000/20000 accounts, batches done: [0, 1, 2, 3, 4, 5, 6, 7]
+2026-06-14T01:27:13 [INFO] Generating batch 8 (accounts ACC-016001 … ACC-018000) …
+2026-06-14T01:27:13 [INFO]   Batch 8: 2000 generated, 2000 rows inserted.
+2026-06-14T01:27:13 [INFO]   Progress saved: 18000/20000 accounts, batches done: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+2026-06-14T01:27:13 [INFO] Generating batch 9 (accounts ACC-018001 … ACC-020000) …
+2026-06-14T01:27:13 [INFO]   Batch 9: 2000 generated, 2000 rows inserted.
+2026-06-14T01:27:13 [INFO]   Progress saved: 20000/20000 accounts, batches done: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+2026-06-14T01:27:13 [INFO] Database connection closed.
+2026-06-14T01:27:13 [INFO] === 02_generate_accounts.py finished successfully ===
+2026-06-14T01:27:19 [INFO] === 03_generate_relationships.py started ===
+2026-06-14T01:27:19 [INFO] Loading reference data …
+2026-06-14T01:27:19 [INFO]   sanctioned_entities: 8000 rows
+2026-06-14T01:27:19 [INFO]   sanctioned_relationships (FTM): 0 rows
+2026-06-14T01:27:19 [INFO] Loading accounts from database: /home/mihajlo/Mihajlo/Projekti/garaza/project/sanctions_screening.db …
+2026-06-14T01:27:19 [INFO]   20000 accounts loaded.
+2026-06-14T01:27:19 [INFO] Building account relationships …
+2026-06-14T01:27:21 [INFO]   13212 relationship rows to insert.
+2026-06-14T01:27:21 [INFO]   account_relationships: inserted chunk [0:5000] (5000 rows)
+2026-06-14T01:27:21 [INFO]   account_relationships: inserted chunk [5000:10000] (5000 rows)
+2026-06-14T01:27:21 [INFO]   account_relationships: inserted chunk [10000:13212] (3212 rows)
+2026-06-14T01:27:21 [INFO]   Total inserted: 13212 rows.
+2026-06-14T01:27:21 [INFO] progress.json updated: relationships_complete=true
+2026-06-14T01:27:21 [INFO] Building wallets …
+2026-06-14T01:27:21 [INFO]   3306 wallet rows to insert.
+2026-06-14T01:27:21 [INFO]   wallets: inserted chunk [0:3306] (3306 rows)
+2026-06-14T01:27:21 [INFO]   Total inserted: 3306 rows.
+2026-06-14T01:27:21 [INFO] progress.json updated: wallets_complete=true
+2026-06-14T01:27:21 [INFO] Database connection closed.
+2026-06-14T01:27:21 [INFO] === 03_generate_relationships.py finished successfully ===
+2026-06-14T01:27:55 [INFO] === 03_generate_relationships.py started ===
+2026-06-14T01:27:55 [INFO] Loading reference data …
+2026-06-14T01:27:55 [INFO]   sanctioned_entities: 8000 rows
+2026-06-14T01:27:55 [INFO]   sanctioned_relationships (FTM): 1499 rows
+2026-06-14T01:27:55 [INFO] Loading accounts from database: /home/mihajlo/Mihajlo/Projekti/garaza/project/sanctions_screening.db …
+2026-06-14T01:27:55 [INFO]   20000 accounts loaded.
+2026-06-14T01:27:55 [INFO] Building account relationships …
+2026-06-14T01:27:57 [INFO]   13088 relationship rows to insert.
+2026-06-14T01:27:57 [INFO]   account_relationships: inserted chunk [0:5000] (5000 rows)
+2026-06-14T01:27:57 [INFO]   account_relationships: inserted chunk [5000:10000] (5000 rows)
+2026-06-14T01:27:57 [INFO]   account_relationships: inserted chunk [10000:13088] (3088 rows)
+2026-06-14T01:27:57 [INFO]   Total inserted: 13088 rows.
+2026-06-14T01:27:57 [INFO] progress.json updated: relationships_complete=true
+2026-06-14T01:27:57 [INFO] Building wallets …
+2026-06-14T01:27:57 [INFO]   3379 wallet rows to insert.
+2026-06-14T01:27:57 [INFO]   wallets: inserted chunk [0:3379] (3379 rows)
+2026-06-14T01:27:57 [INFO]   Total inserted: 3379 rows.
+2026-06-14T01:27:57 [INFO] progress.json updated: wallets_complete=true
+2026-06-14T01:27:57 [INFO] Database connection closed.
+2026-06-14T01:27:57 [INFO] === 03_generate_relationships.py finished successfully ===
+2026-06-14T01:28:02 [INFO] === 04_generate_transactions.py started ===
+2026-06-14T01:28:02 [INFO] Loaded rail distributions from /home/mihajlo/Mihajlo/Projekti/garaza/project/reference_data/aml_transactions_sample.csv: ['ach', 'card', 'check', 'internal', 'other', 'wire']
+2026-06-14T01:28:02 [INFO] Loaded hour distribution from /home/mihajlo/Mihajlo/Projekti/garaza/project/reference_data/aml_hour_dist.csv
+2026-06-14T01:28:02 [INFO] Loaded dow distribution from /home/mihajlo/Mihajlo/Projekti/garaza/project/reference_data/aml_dow_dist.csv
+2026-06-14T01:28:02 [INFO] Loaded laundering velocity data from /home/mihajlo/Mihajlo/Projekti/garaza/project/reference_data/aml_laundering_velocity.json
+2026-06-14T01:28:02 [INFO] Loaded 20,000 accounts.
+2026-06-14T01:28:02 [INFO] Loaded 3,379 wallets, 122 distinct countries.
+2026-06-14T01:28:02 [INFO] Sender pool size: 16,966 active accounts.
+2026-06-14T01:28:02 [INFO] Generating batch 0 (TXN #1 … #10,000) ...
+2026-06-14T01:28:02 [INFO]   Batch 0 inserted 10,000 rows. Total done: 10,000.
+2026-06-14T01:28:02 [INFO] Generating batch 1 (TXN #10,001 … #20,000) ...
+2026-06-14T01:28:02 [INFO]   Batch 1 inserted 10,000 rows. Total done: 20,000.
+2026-06-14T01:28:02 [INFO] Generating batch 2 (TXN #20,001 … #30,000) ...
+2026-06-14T01:28:03 [INFO]   Batch 2 inserted 10,000 rows. Total done: 30,000.
+2026-06-14T01:28:03 [INFO] Generating batch 3 (TXN #30,001 … #40,000) ...
+2026-06-14T01:28:03 [INFO]   Batch 3 inserted 10,000 rows. Total done: 40,000.
+2026-06-14T01:28:03 [INFO] Generating batch 4 (TXN #40,001 … #50,000) ...
+2026-06-14T01:28:03 [INFO]   Batch 4 inserted 10,000 rows. Total done: 50,000.
+2026-06-14T01:28:03 [INFO] Generating batch 5 (TXN #50,001 … #60,000) ...
+2026-06-14T01:28:03 [INFO]   Batch 5 inserted 10,000 rows. Total done: 60,000.
+2026-06-14T01:28:03 [INFO] Generating batch 6 (TXN #60,001 … #70,000) ...
+2026-06-14T01:28:03 [INFO]   Batch 6 inserted 10,000 rows. Total done: 70,000.
+2026-06-14T01:28:03 [INFO] Generating batch 7 (TXN #70,001 … #80,000) ...
+2026-06-14T01:28:04 [INFO]   Batch 7 inserted 10,000 rows. Total done: 80,000.
+2026-06-14T01:28:04 [INFO] Generating batch 8 (TXN #80,001 … #90,000) ...
+2026-06-14T01:28:04 [INFO]   Batch 8 inserted 10,000 rows. Total done: 90,000.
+2026-06-14T01:28:04 [INFO] Generating batch 9 (TXN #90,001 … #100,000) ...
+2026-06-14T01:28:04 [INFO]   Batch 9 inserted 10,000 rows. Total done: 100,000.
+2026-06-14T01:28:04 [INFO] Generating batch 10 (TXN #100,001 … #110,000) ...
+2026-06-14T01:28:04 [INFO]   Batch 10 inserted 10,000 rows. Total done: 110,000.
+2026-06-14T01:28:04 [INFO] Generating batch 11 (TXN #110,001 … #120,000) ...
+2026-06-14T01:28:04 [INFO]   Batch 11 inserted 10,000 rows. Total done: 120,000.
+2026-06-14T01:28:04 [INFO] Generating batch 12 (TXN #120,001 … #130,000) ...
+2026-06-14T01:28:04 [INFO]   Batch 12 inserted 10,000 rows. Total done: 130,000.
+2026-06-14T01:28:04 [INFO] Generating batch 13 (TXN #130,001 … #140,000) ...
+2026-06-14T01:28:04 [INFO]   Batch 13 inserted 10,000 rows. Total done: 140,000.
+2026-06-14T01:28:04 [INFO] Generating batch 14 (TXN #140,001 … #150,000) ...
+2026-06-14T01:28:05 [INFO]   Batch 14 inserted 10,000 rows. Total done: 150,000.
+2026-06-14T01:28:05 [INFO] Generating batch 15 (TXN #150,001 … #160,000) ...
+2026-06-14T01:28:05 [INFO]   Batch 15 inserted 10,000 rows. Total done: 160,000.
+2026-06-14T01:28:05 [INFO] Generating batch 16 (TXN #160,001 … #170,000) ...
+2026-06-14T01:28:05 [INFO]   Batch 16 inserted 10,000 rows. Total done: 170,000.
+2026-06-14T01:28:05 [INFO] Generating batch 17 (TXN #170,001 … #180,000) ...
+2026-06-14T01:28:05 [INFO]   Batch 17 inserted 10,000 rows. Total done: 180,000.
+2026-06-14T01:28:05 [INFO] Generating batch 18 (TXN #180,001 … #190,000) ...
+2026-06-14T01:28:05 [INFO]   Batch 18 inserted 10,000 rows. Total done: 190,000.
+2026-06-14T01:28:05 [INFO] Generating batch 19 (TXN #190,001 … #200,000) ...
+2026-06-14T01:28:05 [INFO]   Batch 19 inserted 10,000 rows. Total done: 200,000.
+2026-06-14T01:28:05 [INFO] All 20 batches complete.
+2026-06-14T01:28:05 [INFO] Starting velocity post-pass...
+2026-06-14T01:28:06 [INFO] Loaded 199,387 transactions for velocity pass.
+2026-06-14T01:28:11 [INFO] Velocity pass complete. Updated 199,387 rows.
+2026-06-14T01:28:11 [INFO] progress.json updated: transactions_velocity_pass_complete=true
+2026-06-14T01:28:11 [INFO] === 04_generate_transactions.py finished ===
+2026-06-14T01:28:33 [INFO] === 05_generate_screening_results.py started ===
+2026-06-14T01:28:33 [INFO] Loaded matching pairs stats from /home/mihajlo/Mihajlo/Projekti/garaza/project/reference_data/matching_pairs_stats.json
+2026-06-14T01:28:33 [INFO] Loaded country risk for 226 countries from /home/mihajlo/Mihajlo/Projekti/garaza/project/reference_data/country_risk.csv.
+2026-06-14T01:28:33 [INFO] Loaded 8,000 sanctioned entities from /home/mihajlo/Mihajlo/Projekti/garaza/project/reference_data/sanctioned_entities.csv.
+2026-06-14T01:28:33 [INFO] Loaded 20,000 accounts.
+2026-06-14T01:28:33 [INFO] Built relationship hop map: 452 accounts with sanctions links.
+2026-06-14T01:28:34 [INFO] Loaded 199,387 transactions.
+2026-06-14T01:28:34 [INFO] Generating account-level screening results ...
+2026-06-14T01:28:34 [DEBUG]   Flushed account screening at SCR-00002000
+2026-06-14T01:28:34 [DEBUG]   Flushed account screening at SCR-00004000
+2026-06-14T01:28:34 [DEBUG]   Flushed account screening at SCR-00006000
+2026-06-14T01:28:34 [DEBUG]   Flushed account screening at SCR-00008000
+2026-06-14T01:28:34 [DEBUG]   Flushed account screening at SCR-00010000
+2026-06-14T01:28:34 [DEBUG]   Flushed account screening at SCR-00012000
+2026-06-14T01:28:34 [DEBUG]   Flushed account screening at SCR-00014000
+2026-06-14T01:28:34 [DEBUG]   Flushed account screening at SCR-00016000
+2026-06-14T01:28:34 [DEBUG]   Flushed account screening at SCR-00018000
+2026-06-14T01:28:34 [DEBUG]   Flushed account screening at SCR-00020000
+2026-06-14T01:28:34 [INFO] Account screening complete: 20,000 results inserted.
+2026-06-14T01:28:34 [INFO] Selecting high-risk transactions for screening ...
+2026-06-14T01:30:01 [INFO] Selected 19,938 transactions for screening.
+2026-06-14T01:30:01 [DEBUG]   Flushed transaction screening at SCR-00022000
+2026-06-14T01:30:01 [DEBUG]   Flushed transaction screening at SCR-00024000
+2026-06-14T01:30:01 [DEBUG]   Flushed transaction screening at SCR-00026000
+2026-06-14T01:30:01 [DEBUG]   Flushed transaction screening at SCR-00028000
+2026-06-14T01:30:01 [DEBUG]   Flushed transaction screening at SCR-00030000
+2026-06-14T01:30:01 [DEBUG]   Flushed transaction screening at SCR-00032000
+2026-06-14T01:30:01 [DEBUG]   Flushed transaction screening at SCR-00034000
+2026-06-14T01:30:01 [DEBUG]   Flushed transaction screening at SCR-00036000
+2026-06-14T01:30:01 [DEBUG]   Flushed transaction screening at SCR-00038000
+2026-06-14T01:30:01 [INFO] Transaction screening complete. Total screening results: 39,938.
+2026-06-14T01:30:01 [INFO] === Ground truth distribution ===
+  Total screening results : 39,938
+  BLOCK                   : 1,763  (4.414%)
+  REVIEW                  : 7,918  (19.83%)
+  CLEAR                   : 30,257  (75.76%)
+  Positive rate (BLOCK)   : 4.4143%
+  WARNING: Positive rate 4.4143% is outside target range 0.20%-0.50%
+2026-06-14T01:30:01 [INFO] progress.json updated: screening_results_complete=true
+2026-06-14T01:30:01 [INFO] === 05_generate_screening_results.py finished ===
+2026-06-14T01:30:19 [INFO] === 06_compute_risk_scores.py started ===
+2026-06-14T01:30:19 [INFO] Loaded country risk scores for 226 countries.
+2026-06-14T01:30:19 [INFO] Loading accounts …
+2026-06-14T01:30:19 [INFO]   20000 accounts loaded.
+2026-06-14T01:30:19 [INFO] Loading auxiliary data …
+2026-06-14T01:30:20 [INFO]   PEP records: 0, accounts with relationships: 7185, accounts with transactions: 16944
+2026-06-14T01:30:20 [INFO] Computed 20000 risk scores. Applying overrides …
+2026-06-14T01:30:20 [INFO] Inserting into risk_scores …
+2026-06-14T01:30:20 [INFO]   Inserted rows 1–1000
+2026-06-14T01:30:20 [INFO]   Inserted rows 1001–2000
+2026-06-14T01:30:20 [INFO]   Inserted rows 2001–3000
+2026-06-14T01:30:20 [INFO]   Inserted rows 3001–4000
+2026-06-14T01:30:20 [INFO]   Inserted rows 4001–5000
+2026-06-14T01:30:20 [INFO]   Inserted rows 5001–6000
+2026-06-14T01:30:20 [INFO]   Inserted rows 6001–7000
+2026-06-14T01:30:20 [INFO]   Inserted rows 7001–8000
+2026-06-14T01:30:20 [INFO]   Inserted rows 8001–9000
+2026-06-14T01:30:20 [INFO]   Inserted rows 9001–10000
+2026-06-14T01:30:20 [INFO]   Inserted rows 10001–11000
+2026-06-14T01:30:20 [INFO]   Inserted rows 11001–12000
+2026-06-14T01:30:20 [INFO]   Inserted rows 12001–13000
+2026-06-14T01:30:20 [INFO]   Inserted rows 13001–14000
+2026-06-14T01:30:20 [INFO]   Inserted rows 14001–15000
+2026-06-14T01:30:20 [INFO]   Inserted rows 15001–16000
+2026-06-14T01:30:20 [INFO]   Inserted rows 16001–17000
+2026-06-14T01:30:20 [INFO]   Inserted rows 17001–18000
+2026-06-14T01:30:20 [INFO]   Inserted rows 18001–19000
+2026-06-14T01:30:20 [INFO]   Inserted rows 19001–20000
+2026-06-14T01:30:20 [INFO] Override applied: 200 accounts.
+2026-06-14T01:30:20 [INFO] Band distribution: {'LOW': 19282, 'MEDIUM': 482, 'CRITICAL': 201, 'HIGH': 35}
+2026-06-14T01:30:20 [INFO] progress.json updated: risk_scores_complete=true
+2026-06-14T01:30:20 [INFO] === 06_compute_risk_scores.py finished ===
+2026-06-14T01:31:06 [INFO] === 06_compute_risk_scores.py started ===
+2026-06-14T01:31:06 [INFO] Loaded country risk scores for 226 countries.
+2026-06-14T01:31:06 [INFO] Loading accounts …
+2026-06-14T01:31:06 [INFO]   20000 accounts loaded.
+2026-06-14T01:31:06 [INFO] Loading auxiliary data …
+2026-06-14T01:31:07 [INFO]   PEP records: 3000, accounts with relationships: 7185, accounts with transactions: 16944
+2026-06-14T01:31:07 [INFO] Computed 20000 risk scores. Applying overrides …
+2026-06-14T01:31:07 [INFO] Inserting into risk_scores …
+2026-06-14T01:31:07 [INFO]   Inserted rows 1–1000
+2026-06-14T01:31:07 [INFO]   Inserted rows 1001–2000
+2026-06-14T01:31:07 [INFO]   Inserted rows 2001–3000
+2026-06-14T01:31:07 [INFO]   Inserted rows 3001–4000
+2026-06-14T01:31:07 [INFO]   Inserted rows 4001–5000
+2026-06-14T01:31:07 [INFO]   Inserted rows 5001–6000
+2026-06-14T01:31:07 [INFO]   Inserted rows 6001–7000
+2026-06-14T01:31:07 [INFO]   Inserted rows 7001–8000
+2026-06-14T01:31:07 [INFO]   Inserted rows 8001–9000
+2026-06-14T01:31:07 [INFO]   Inserted rows 9001–10000
+2026-06-14T01:31:07 [INFO]   Inserted rows 10001–11000
+2026-06-14T01:31:07 [INFO]   Inserted rows 11001–12000
+2026-06-14T01:31:07 [INFO]   Inserted rows 12001–13000
+2026-06-14T01:31:07 [INFO]   Inserted rows 13001–14000
+2026-06-14T01:31:07 [INFO]   Inserted rows 14001–15000
+2026-06-14T01:31:07 [INFO]   Inserted rows 15001–16000
+2026-06-14T01:31:07 [INFO]   Inserted rows 16001–17000
+2026-06-14T01:31:07 [INFO]   Inserted rows 17001–18000
+2026-06-14T01:31:07 [INFO]   Inserted rows 18001–19000
+2026-06-14T01:31:07 [INFO]   Inserted rows 19001–20000
+2026-06-14T01:31:07 [INFO] Override applied: 200 accounts.
+2026-06-14T01:31:07 [INFO] Band distribution: {'LOW': 19253, 'MEDIUM': 508, 'CRITICAL': 201, 'HIGH': 38}
+2026-06-14T01:31:07 [INFO] progress.json updated: risk_scores_complete=true
+2026-06-14T01:31:07 [INFO] === 06_compute_risk_scores.py finished ===
+2026-06-14T01:31:15 [INFO] === 07_compute_dynamic_thresholds.py started ===
+2026-06-14T01:31:15 [INFO] Loading screening results …
+2026-06-14T01:31:15 [INFO]   39938 screening results loaded.
+2026-06-14T01:31:15 [INFO] Inserting threshold decisions …
+2026-06-14T01:31:15 [INFO]   Inserted rows 1–2000
+2026-06-14T01:31:15 [INFO]   Inserted rows 2001–4000
+2026-06-14T01:31:15 [INFO]   Inserted rows 4001–6000
+2026-06-14T01:31:15 [INFO]   Inserted rows 6001–8000
+2026-06-14T01:31:15 [INFO]   Inserted rows 8001–10000
+2026-06-14T01:31:15 [INFO]   Inserted rows 10001–12000
+2026-06-14T01:31:15 [INFO]   Inserted rows 12001–14000
+2026-06-14T01:31:15 [INFO]   Inserted rows 14001–16000
+2026-06-14T01:31:15 [INFO]   Inserted rows 16001–18000
+2026-06-14T01:31:15 [INFO]   Inserted rows 18001–20000
+2026-06-14T01:31:15 [INFO]   Inserted rows 20001–22000
+2026-06-14T01:31:15 [INFO]   Inserted rows 22001–24000
+2026-06-14T01:31:15 [INFO]   Inserted rows 24001–26000
+2026-06-14T01:31:15 [INFO]   Inserted rows 26001–28000
+2026-06-14T01:31:15 [INFO]   Inserted rows 28001–30000
+2026-06-14T01:31:15 [INFO]   Inserted rows 30001–32000
+2026-06-14T01:31:15 [INFO]   Inserted rows 32001–34000
+2026-06-14T01:31:15 [INFO]   Inserted rows 34001–36000
+2026-06-14T01:31:15 [INFO]   Inserted rows 36001–38000
+2026-06-14T01:31:15 [INFO]   Inserted rows 38001–39938
+2026-06-14T01:31:15 [INFO] verdicts_differ count: 1639 (4.1%)
+2026-06-14T01:31:15 [INFO]   static verdict distribution: {'CLEAR': 33132, 'REVIEW': 3693, 'BLOCK': 3113}
+2026-06-14T01:31:15 [INFO]   dynamic verdict distribution: {'CLEAR': 34401, 'REVIEW': 2740, 'BLOCK': 2797}
+2026-06-14T01:31:15 [INFO] progress.json updated: threshold_decisions_complete=true
+2026-06-14T01:31:15 [INFO] === 07_compute_dynamic_thresholds.py finished ===
+2026-06-14T01:31:20 [INFO] === 08_generate_explanatory_logs.py started ===
+2026-06-14T01:31:20 [INFO] Loading auxiliary data …
+2026-06-14T01:31:21 [INFO] Generating narratives for CRITICAL/HIGH risk accounts …
+2026-06-14T01:31:21 [INFO]   Found 239 CRITICAL/HIGH records.
+2026-06-14T01:31:21 [INFO] Generating narratives for low-risk account sample …
+2026-06-14T01:31:21 [INFO]   Sampled 500 LOW-risk records.
+2026-06-14T01:31:21 [INFO] Generating narratives for differing threshold decisions …
+2026-06-14T01:31:21 [INFO]   Found 1639 differing decisions.
+2026-06-14T01:31:21 [INFO] Generating narratives for top-1000 screening results …
+2026-06-14T01:31:21 [INFO]   Loaded 1000 top screening results.
+2026-06-14T01:31:21 [INFO] Total log entries to insert: 3378
+2026-06-14T01:31:21 [INFO]   Inserted rows 1–500
+2026-06-14T01:31:21 [INFO]   Inserted rows 501–1000
+2026-06-14T01:31:21 [INFO]   Inserted rows 1001–1500
+2026-06-14T01:31:21 [INFO]   Inserted rows 1501–2000
+2026-06-14T01:31:21 [INFO]   Inserted rows 2001–2500
+2026-06-14T01:31:21 [INFO]   Inserted rows 2501–3000
+2026-06-14T01:31:21 [INFO]   Inserted rows 3001–3378
+2026-06-14T01:31:21 [INFO] progress.json updated: explanatory_logs_complete=true
+2026-06-14T01:31:21 [INFO] === 08_generate_explanatory_logs.py finished ===
+2026-06-14T01:31:26 [INFO] === 09_comparison_report.py started ===
+2026-06-14T01:31:26 [INFO] Building dataset summary …
+2026-06-14T01:31:26 [INFO] Building threshold comparison …
+2026-06-14T01:31:26 [INFO] Building risk score distribution …
+2026-06-14T01:31:26 [INFO] Building key metrics …
+2026-06-14T01:31:26 [INFO] Markdown report written to: /home/mihajlo/Mihajlo/Projekti/garaza/project/comparison_summary.md
+2026-06-14T01:31:26 [INFO] JSON report written to: /home/mihajlo/Mihajlo/Projekti/garaza/project/comparison_summary.json
+2026-06-14T01:31:26 [INFO] progress.json updated: comparison_summary_complete=true
+2026-06-14T01:31:26 [INFO] === 09_comparison_report.py finished ===
+2026-06-14T01:31:31 [INFO] === 10_export.py started ===
+2026-06-14T01:31:31 [INFO] Exporting: accounts
+2026-06-14T01:31:31 [INFO]   Reading table: accounts
+2026-06-14T01:31:31 [INFO]     20,000 rows, 19 columns
+2026-06-14T01:31:32 [INFO]     Written 0.7 MB → accounts.parquet
+2026-06-14T01:31:32 [INFO] Exporting: account_relationships
+2026-06-14T01:31:32 [INFO]   Reading table: account_relationships
+2026-06-14T01:31:32 [INFO]     13,088 rows, 8 columns
+2026-06-14T01:31:32 [INFO]     Written 0.2 MB → account_relationships.parquet
+2026-06-14T01:31:32 [INFO] Exporting: wallets
+2026-06-14T01:31:32 [INFO]   Reading table: wallets
+2026-06-14T01:31:32 [INFO]     3,379 rows, 7 columns
+2026-06-14T01:31:32 [INFO]     Written 0.1 MB → wallets.parquet
+2026-06-14T01:31:32 [INFO] Exporting: transactions
+2026-06-14T01:31:32 [INFO]   Reading table: transactions
+2026-06-14T01:31:33 [INFO]     199,387 rows, 18 columns
+2026-06-14T01:31:33 [INFO]     Written 5.6 MB → transactions.parquet
+2026-06-14T01:31:33 [INFO] Exporting: screening_results
+2026-06-14T01:31:33 [INFO]   Reading table: screening_results
+2026-06-14T01:31:33 [INFO]     39,938 rows, 13 columns
+2026-06-14T01:31:33 [INFO]     Written 0.5 MB → screening_results.parquet
+2026-06-14T01:31:33 [INFO] Exporting: risk_scores
+2026-06-14T01:31:33 [INFO]   Reading table: risk_scores
+2026-06-14T01:31:33 [INFO]     20,000 rows, 12 columns
+2026-06-14T01:31:33 [INFO]     Written 0.5 MB → risk_scores.parquet
+2026-06-14T01:31:33 [INFO] Exporting: threshold_decisions
+2026-06-14T01:31:33 [INFO]   Reading table: threshold_decisions
+2026-06-14T01:31:33 [INFO]     39,938 rows, 9 columns
+2026-06-14T01:31:33 [INFO]     Written 0.5 MB → threshold_decisions.parquet
+2026-06-14T01:31:33 [INFO] Exporting: explanatory_logs
+2026-06-14T01:31:33 [INFO]   Reading table: explanatory_logs
+2026-06-14T01:31:33 [INFO]     3,378 rows, 5 columns
+2026-06-14T01:31:33 [INFO]     Written 0.1 MB → explanatory_logs.parquet
+2026-06-14T01:31:33 [INFO] Written: /home/mihajlo/Mihajlo/Projekti/garaza/project/exports/load_dataset.py
+2026-06-14T01:31:33 [INFO] Written: /home/mihajlo/Mihajlo/Projekti/garaza/project/exports/README.md
+2026-06-14T01:31:33 [INFO] Written: /home/mihajlo/Mihajlo/Projekti/garaza/.gitignore
+2026-06-14T01:31:33 [INFO] Written: /home/mihajlo/Mihajlo/Projekti/garaza/.gitattributes
+2026-06-14T01:31:33 [INFO] Export summary:
+2026-06-14T01:31:33 [INFO]   accounts: 20,000 rows
+2026-06-14T01:31:33 [INFO]   account_relationships: 13,088 rows
+2026-06-14T01:31:33 [INFO]   wallets: 3,379 rows
+2026-06-14T01:31:33 [INFO]   transactions: 199,387 rows
+2026-06-14T01:31:33 [INFO]   screening_results: 39,938 rows
+2026-06-14T01:31:33 [INFO]   risk_scores: 20,000 rows
+2026-06-14T01:31:33 [INFO]   threshold_decisions: 39,938 rows
+2026-06-14T01:31:33 [INFO]   explanatory_logs: 3,378 rows
+2026-06-14T01:31:33 [INFO]   Total rows across all tables: 339,108
+2026-06-14T01:31:33 [INFO] progress.json updated: export_complete=true
+2026-06-14T01:31:33 [INFO] === 10_export.py finished ===
+2026-06-14T01:42:28 [INFO] === 11_train_xgboost.py started ===
+2026-06-14T01:42:28 [INFO] Loading data from database …
+2026-06-14T01:42:28 [INFO] Loaded 20,000 rows.
+2026-06-14T01:42:28 [INFO] Label distribution:
+verdict_ground_truth
+CLEAR     19047
+REVIEW      906
+BLOCK        47
+2026-06-14T01:42:28 [INFO] Multiclass encoding: {'BLOCK': np.int64(0), 'CLEAR': np.int64(1), 'REVIEW': np.int64(2)}
+2026-06-14T01:42:28 [INFO] Binary: 47 BLOCK, 19953 non-BLOCK. scale_pos_weight=424.5
+2026-06-14T01:42:28 [INFO] Training binary model (BLOCK vs not-BLOCK) …
+2026-06-14T01:42:29 [INFO] Binary — in-sample classification report:
+2026-06-14T01:42:29 [INFO] Binary — in-sample ROC-AUC: 1.0000
+2026-06-14T01:42:29 [INFO] Binary — running 5-fold CV …
+2026-06-14T01:42:30 [INFO] Binary — CV ROC-AUC: 1.0000 ± 0.0000
+2026-06-14T01:42:30 [INFO] Binary — CV F1:      1.0000 ± 0.0000
+2026-06-14T01:42:30 [INFO] Binary — top 10 features by importance:
+2026-06-14T01:42:30 [INFO]   hops_to_sanctioned                  0.5474
+2026-06-14T01:42:30 [INFO]   name_match_type_enc                 0.2910
+2026-06-14T01:42:30 [INFO]   pep_sanctions_risk                  0.1539
+2026-06-14T01:42:30 [INFO]   dynamic_verdict_enc                 0.0076
+2026-06-14T01:42:30 [INFO]   identity_kyc_risk                   0.0002
+2026-06-14T01:42:30 [INFO]   account_type_enc                    0.0000
+2026-06-14T01:42:30 [INFO]   kyc_completeness                    0.0000
+2026-06-14T01:42:30 [INFO]   kyc_status_enc                      0.0000
+2026-06-14T01:42:30 [INFO]   is_pep                              0.0000
+2026-06-14T01:42:30 [INFO]   has_complex_ownership               0.0000
+2026-06-14T01:42:30 [INFO] Binary model saved → /home/mihajlo/Mihajlo/Projekti/garaza/project/exports/model_binary.ubj
+2026-06-14T01:42:30 [INFO] Training multiclass model (BLOCK / REVIEW / CLEAR) …
+2026-06-14T01:42:30 [INFO] Multiclass — in-sample classification report:
+2026-06-14T01:42:30 [INFO] Multiclass — running 5-fold CV (macro-F1) …
+2026-06-14T01:42:47 [INFO] === 11_train_xgboost.py started ===
+2026-06-14T01:42:47 [INFO] Loading data from database …
+2026-06-14T01:42:47 [INFO] Loaded 20,000 rows.
+2026-06-14T01:42:47 [INFO] Label distribution:
+verdict_ground_truth
+CLEAR     19047
+REVIEW      906
+BLOCK        47
+2026-06-14T01:42:47 [INFO] Multiclass encoding: {'BLOCK': np.int64(0), 'CLEAR': np.int64(1), 'REVIEW': np.int64(2)}
+2026-06-14T01:42:47 [INFO] Binary: 47 BLOCK, 19953 non-BLOCK. scale_pos_weight=424.5
+2026-06-14T01:42:47 [INFO] Training binary model (BLOCK vs not-BLOCK) …
+2026-06-14T01:42:48 [INFO] Binary — in-sample classification report:
+2026-06-14T01:42:48 [INFO] Binary — in-sample ROC-AUC: 1.0000
+2026-06-14T01:42:48 [INFO] Binary — running 5-fold CV …
+2026-06-14T01:42:48 [INFO] Binary — CV ROC-AUC: 1.0000 ± 0.0000
+2026-06-14T01:42:48 [INFO] Binary — CV F1:      1.0000 ± 0.0000
+2026-06-14T01:42:48 [INFO] Binary — top 10 features by importance:
+2026-06-14T01:42:48 [INFO]   hops_to_sanctioned                  0.5474
+2026-06-14T01:42:48 [INFO]   name_match_type_enc                 0.2910
+2026-06-14T01:42:48 [INFO]   pep_sanctions_risk                  0.1539
+2026-06-14T01:42:48 [INFO]   dynamic_verdict_enc                 0.0076
+2026-06-14T01:42:48 [INFO]   identity_kyc_risk                   0.0002
+2026-06-14T01:42:48 [INFO]   account_type_enc                    0.0000
+2026-06-14T01:42:48 [INFO]   kyc_completeness                    0.0000
+2026-06-14T01:42:48 [INFO]   kyc_status_enc                      0.0000
+2026-06-14T01:42:48 [INFO]   is_pep                              0.0000
+2026-06-14T01:42:48 [INFO]   has_complex_ownership               0.0000
+2026-06-14T01:42:48 [INFO] Binary model saved → /home/mihajlo/Mihajlo/Projekti/garaza/project/exports/model_binary.ubj
+2026-06-14T01:42:48 [INFO] Training multiclass model (BLOCK / REVIEW / CLEAR) …
+2026-06-14T01:42:49 [INFO] Multiclass — in-sample classification report:
+2026-06-14T01:42:49 [INFO] Multiclass — running 5-fold CV (macro-F1) …
+2026-06-14T01:42:50 [INFO] Multiclass — CV macro-F1: 0.9998 ± 0.0004
+2026-06-14T01:42:50 [INFO] Multiclass — top 10 features by importance:
+2026-06-14T01:42:50 [INFO]   dynamic_t_block                     0.2467
+2026-06-14T01:42:50 [INFO]   overall_risk_score                  0.2215
+2026-06-14T01:42:50 [INFO]   name_match_type_enc                 0.1636
+2026-06-14T01:42:50 [INFO]   dynamic_t_review                    0.1568
+2026-06-14T01:42:50 [INFO]   kyc_completeness                    0.0356
+2026-06-14T01:42:50 [INFO]   country_risk_score                  0.0315
+2026-06-14T01:42:50 [INFO]   geographic_risk                     0.0230
+2026-06-14T01:42:50 [INFO]   static_verdict_enc                  0.0222
+2026-06-14T01:42:50 [INFO]   match_score                         0.0198
+2026-06-14T01:42:50 [INFO]   hops_to_sanctioned                  0.0167
+2026-06-14T01:42:50 [INFO] Multiclass model saved → /home/mihajlo/Mihajlo/Projekti/garaza/project/exports/model_multiclass.ubj
+2026-06-14T01:42:50 [INFO] Learnability check: CV ROC-AUC=1.0000 (threshold=0.85) → PASS
+2026-06-14T01:42:50 [INFO] Results saved → /home/mihajlo/Mihajlo/Projekti/garaza/project/exports/xgb_results.json
+2026-06-14T01:42:50 [INFO] Markdown report saved → /home/mihajlo/Mihajlo/Projekti/garaza/project/exports/xgb_report.md
+2026-06-14T01:42:50 [INFO] === 11_train_xgboost.py finished ===

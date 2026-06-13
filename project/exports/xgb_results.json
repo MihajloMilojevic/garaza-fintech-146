@@ -1,0 +1,254 @@
+{
+  "generated_at": "2026-06-14T01:42:50.343051",
+  "n_samples": 20000,
+  "label_distribution": {
+    "CLEAR": 19047,
+    "REVIEW": 906,
+    "BLOCK": 47
+  },
+  "binary_model": {
+    "insample_roc_auc": 1.0,
+    "insample_precision_block": 1.0,
+    "insample_recall_block": 1.0,
+    "insample_f1_block": 1.0,
+    "cv_roc_auc_mean": 1.0,
+    "cv_roc_auc_std": 0.0,
+    "cv_f1_mean": 1.0,
+    "cv_f1_std": 0.0,
+    "confusion_matrix": [
+      [
+        19953,
+        0
+      ],
+      [
+        0,
+        47
+      ]
+    ],
+    "feature_importances": [
+      [
+        "hops_to_sanctioned",
+        0.5473731160163879
+      ],
+      [
+        "name_match_type_enc",
+        0.2909998893737793
+      ],
+      [
+        "pep_sanctions_risk",
+        0.15385958552360535
+      ],
+      [
+        "dynamic_verdict_enc",
+        0.007564930245280266
+      ],
+      [
+        "identity_kyc_risk",
+        0.0002024753630394116
+      ],
+      [
+        "account_type_enc",
+        0.0
+      ],
+      [
+        "kyc_completeness",
+        0.0
+      ],
+      [
+        "kyc_status_enc",
+        0.0
+      ],
+      [
+        "is_pep",
+        0.0
+      ],
+      [
+        "has_complex_ownership",
+        0.0
+      ],
+      [
+        "shell_company_flag",
+        0.0
+      ],
+      [
+        "activity_tier_enc",
+        0.0
+      ],
+      [
+        "account_status_enc",
+        0.0
+      ],
+      [
+        "match_score",
+        0.0
+      ],
+      [
+        "shares_address_with_sanctioned",
+        0.0
+      ],
+      [
+        "pep_exposure_score",
+        0.0
+      ],
+      [
+        "country_risk_score",
+        0.0
+      ],
+      [
+        "geographic_risk",
+        0.0
+      ],
+      [
+        "behavioural_risk",
+        0.0
+      ],
+      [
+        "relationship_network_risk",
+        0.0
+      ]
+    ],
+    "model_path": "/home/mihajlo/Mihajlo/Projekti/garaza/project/exports/model_binary.ubj"
+  },
+  "multiclass_model": {
+    "cv_macro_f1_mean": 0.9998065800347803,
+    "cv_macro_f1_std": 0.00038683993043959753,
+    "class_names": [
+      "BLOCK",
+      "CLEAR",
+      "REVIEW"
+    ],
+    "confusion_matrix": [
+      [
+        47,
+        0,
+        0
+      ],
+      [
+        0,
+        19047,
+        0
+      ],
+      [
+        0,
+        0,
+        906
+      ]
+    ],
+    "feature_importances": [
+      [
+        "dynamic_t_block",
+        0.24674354493618011
+      ],
+      [
+        "overall_risk_score",
+        0.22146037220954895
+      ],
+      [
+        "name_match_type_enc",
+        0.16358672082424164
+      ],
+      [
+        "dynamic_t_review",
+        0.15679794549942017
+      ],
+      [
+        "kyc_completeness",
+        0.03559435158967972
+      ],
+      [
+        "country_risk_score",
+        0.031459346413612366
+      ],
+      [
+        "geographic_risk",
+        0.02298288233578205
+      ],
+      [
+        "static_verdict_enc",
+        0.02217324636876583
+      ],
+      [
+        "match_score",
+        0.01978280581533909
+      ],
+      [
+        "hops_to_sanctioned",
+        0.016661029309034348
+      ],
+      [
+        "verdicts_differ",
+        0.015510843135416508
+      ],
+      [
+        "identity_kyc_risk",
+        0.01326510775834322
+      ],
+      [
+        "pep_sanctions_risk",
+        0.011865193955600262
+      ],
+      [
+        "has_complex_ownership",
+        0.006172743160277605
+      ],
+      [
+        "relationship_network_risk",
+        0.004047057591378689
+      ],
+      [
+        "account_type_enc",
+        0.0038520877715200186
+      ],
+      [
+        "activity_tier_enc",
+        0.002915374469012022
+      ],
+      [
+        "behavioural_risk",
+        0.0016278723487630486
+      ],
+      [
+        "kyc_status_enc",
+        0.001541860168799758
+      ],
+      [
+        "pep_exposure_score",
+        0.0011964234290644526
+      ]
+    ],
+    "model_path": "/home/mihajlo/Mihajlo/Projekti/garaza/project/exports/model_multiclass.ubj"
+  },
+  "learnability": {
+    "is_learnable": true,
+    "threshold_used": 0.85
+  },
+  "features_used": [
+    "account_type_enc",
+    "kyc_completeness",
+    "kyc_status_enc",
+    "is_pep",
+    "has_complex_ownership",
+    "shell_company_flag",
+    "name_match_type_enc",
+    "activity_tier_enc",
+    "account_status_enc",
+    "match_score",
+    "hops_to_sanctioned",
+    "shares_address_with_sanctioned",
+    "pep_exposure_score",
+    "country_risk_score",
+    "geographic_risk",
+    "identity_kyc_risk",
+    "pep_sanctions_risk",
+    "behavioural_risk",
+    "relationship_network_risk",
+    "overall_risk_score",
+    "override_applied",
+    "static_threshold",
+    "dynamic_t_block",
+    "dynamic_t_review",
+    "static_verdict_enc",
+    "dynamic_verdict_enc",
+    "verdicts_differ"
+  ]
+}

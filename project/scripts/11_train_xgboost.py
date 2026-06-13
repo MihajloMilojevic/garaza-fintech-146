@@ -148,21 +148,36 @@ log(f"Loaded {len(df):,} rows.")
 log(f"Label distribution:\n{df['verdict_ground_truth'].value_counts().to_string()}")
 
 # ── Feature matrix ────────────────────────────────────────────────────────────
+# EXCLUDED (label-proxy columns — they encode the verdict rule itself, not
+# observable signals a real production model would have):
+#   hops_to_sanctioned  — 0 means "direct sanctions match" = IS the BLOCK rule
+#   name_match_type_enc — exact/alias directly determines BLOCK vs REVIEW
+#   static_verdict_enc  — the static model's output, not an input
+#   dynamic_verdict_enc — the dynamic model's output, not an input
+#   verdicts_differ     — derived from both verdicts
+#   static_threshold    — constant, zero information
+#   dynamic_t_block     — linear function of overall_risk_score, redundant
+#   dynamic_t_review    — same
+#
+# KEPT: observable account attributes, screening signals, and risk score
+# components that a production model would genuinely compute upstream.
+
 FEATURE_COLS = [
+    # Account attributes
     "account_type_enc",
     "kyc_completeness",
     "kyc_status_enc",
     "is_pep",
     "has_complex_ownership",
     "shell_company_flag",
-    "name_match_type_enc",
     "activity_tier_enc",
     "account_status_enc",
+    # Screening signals
     "match_score",
-    "hops_to_sanctioned",
     "shares_address_with_sanctioned",
     "pep_exposure_score",
     "country_risk_score",
+    # Risk score components
     "geographic_risk",
     "identity_kyc_risk",
     "pep_sanctions_risk",
@@ -170,12 +185,6 @@ FEATURE_COLS = [
     "relationship_network_risk",
     "overall_risk_score",
     "override_applied",
-    "static_threshold",
-    "dynamic_t_block",
-    "dynamic_t_review",
-    "static_verdict_enc",
-    "dynamic_verdict_enc",
-    "verdicts_differ",
 ]
 
 # account_type: individual=0, business=1
@@ -333,7 +342,7 @@ cm_multi = confusion_matrix(y_multi, y_pred_multi).tolist()
 
 # ── 4. Learnability check ─────────────────────────────────────────────────────
 # A learnable dataset should have CV ROC-AUC >> 0.5 and CV F1 >> baseline
-LEARNABLE_AUC_THRESHOLD = 0.85
+LEARNABLE_AUC_THRESHOLD = 0.90
 is_learnable = cv_bin["roc_auc_mean"] >= LEARNABLE_AUC_THRESHOLD
 log(f"Learnability check: CV ROC-AUC={cv_bin['roc_auc_mean']:.4f} "
     f"(threshold={LEARNABLE_AUC_THRESHOLD}) → {'PASS' if is_learnable else 'BORDERLINE'}")

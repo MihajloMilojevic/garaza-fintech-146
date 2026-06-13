@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-14T01:42:50.343051",
+  "generated_at": "2026-06-14T01:54:26.607363",
   "n_samples": 20000,
   "label_distribution": {
     "CLEAR": 19047,
@@ -8,17 +8,17 @@
   },
   "binary_model": {
     "insample_roc_auc": 1.0,
-    "insample_precision_block": 1.0,
+    "insample_precision_block": 0.9215686274509803,
     "insample_recall_block": 1.0,
-    "insample_f1_block": 1.0,
-    "cv_roc_auc_mean": 1.0,
-    "cv_roc_auc_std": 0.0,
-    "cv_f1_mean": 1.0,
-    "cv_f1_std": 0.0,
+    "insample_f1_block": 0.9591836734693877,
+    "cv_roc_auc_mean": 0.9999498872463042,
+    "cv_roc_auc_std": 0.00010022550739163805,
+    "cv_f1_mean": 0.9609523809523809,
+    "cv_f1_std": 0.03717946913512978,
     "confusion_matrix": [
       [
-        19953,
-        0
+        19949,
+        4
       ],
       [
         0,
@@ -27,36 +27,64 @@
     ],
     "feature_importances": [
       [
-        "hops_to_sanctioned",
-        0.5473731160163879
-      ],
-      [
-        "name_match_type_enc",
-        0.2909998893737793
-      ],
-      [
         "pep_sanctions_risk",
-        0.15385958552360535
+        0.8381880521774292
       ],
       [
-        "dynamic_verdict_enc",
-        0.007564930245280266
+        "match_score",
+        0.12313073128461838
       ],
       [
-        "identity_kyc_risk",
-        0.0002024753630394116
+        "overall_risk_score",
+        0.02507697232067585
+      ],
+      [
+        "override_applied",
+        0.005980869755148888
       ],
       [
         "account_type_enc",
-        0.0
+        0.0026660675648599863
       ],
       [
-        "kyc_completeness",
-        0.0
+        "relationship_network_risk",
+        0.001237285672686994
+      ],
+      [
+        "account_status_enc",
+        0.0012063707690685987
+      ],
+      [
+        "geographic_risk",
+        0.0005532901268452406
+      ],
+      [
+        "pep_exposure_score",
+        0.0005048993625678122
       ],
       [
         "kyc_status_enc",
-        0.0
+        0.0003063656622543931
+      ],
+      [
+        "behavioural_risk",
+        0.00028558814665302634
+      ],
+      [
+        "activity_tier_enc",
+        0.00025164789985865355
+      ],
+      [
+        "kyc_completeness",
+        0.0002415396156720817
+      ],
+      [
+        "identity_kyc_risk",
+        0.00022099327179603279
+      ],
+      [
+        "country_risk_score",
+        0.00014940655091777444
       ],
       [
         "is_pep",
@@ -71,47 +99,15 @@
         0.0
       ],
       [
-        "activity_tier_enc",
-        0.0
-      ],
-      [
-        "account_status_enc",
-        0.0
-      ],
-      [
-        "match_score",
-        0.0
-      ],
-      [
         "shares_address_with_sanctioned",
-        0.0
-      ],
-      [
-        "pep_exposure_score",
-        0.0
-      ],
-      [
-        "country_risk_score",
-        0.0
-      ],
-      [
-        "geographic_risk",
-        0.0
-      ],
-      [
-        "behavioural_risk",
-        0.0
-      ],
-      [
-        "relationship_network_risk",
         0.0
       ]
     ],
     "model_path": "/home/mihajlo/Mihajlo/Projekti/garaza/project/exports/model_binary.ubj"
   },
   "multiclass_model": {
-    "cv_macro_f1_mean": 0.9998065800347803,
-    "cv_macro_f1_std": 0.00038683993043959753,
+    "cv_macro_f1_mean": 0.9964473046533442,
+    "cv_macro_f1_std": 0.006632425471137219,
     "class_names": [
       "BLOCK",
       "CLEAR",
@@ -136,91 +132,87 @@
     ],
     "feature_importances": [
       [
-        "dynamic_t_block",
-        0.24674354493618011
-      ],
-      [
         "overall_risk_score",
-        0.22146037220954895
-      ],
-      [
-        "name_match_type_enc",
-        0.16358672082424164
-      ],
-      [
-        "dynamic_t_review",
-        0.15679794549942017
-      ],
-      [
-        "kyc_completeness",
-        0.03559435158967972
-      ],
-      [
-        "country_risk_score",
-        0.031459346413612366
-      ],
-      [
-        "geographic_risk",
-        0.02298288233578205
-      ],
-      [
-        "static_verdict_enc",
-        0.02217324636876583
-      ],
-      [
-        "match_score",
-        0.01978280581533909
-      ],
-      [
-        "hops_to_sanctioned",
-        0.016661029309034348
-      ],
-      [
-        "verdicts_differ",
-        0.015510843135416508
-      ],
-      [
-        "identity_kyc_risk",
-        0.01326510775834322
+        0.41750985383987427
       ],
       [
         "pep_sanctions_risk",
-        0.011865193955600262
+        0.1525038629770279
       ],
       [
-        "has_complex_ownership",
-        0.006172743160277605
+        "country_risk_score",
+        0.07912562042474747
+      ],
+      [
+        "match_score",
+        0.06507615000009537
+      ],
+      [
+        "override_applied",
+        0.057347822934389114
+      ],
+      [
+        "kyc_completeness",
+        0.05150962620973587
+      ],
+      [
+        "is_pep",
+        0.03887234628200531
+      ],
+      [
+        "identity_kyc_risk",
+        0.0333796888589859
       ],
       [
         "relationship_network_risk",
-        0.004047057591378689
+        0.024708686396479607
       ],
       [
-        "account_type_enc",
-        0.0038520877715200186
-      ],
-      [
-        "activity_tier_enc",
-        0.002915374469012022
+        "geographic_risk",
+        0.022281086072325706
       ],
       [
         "behavioural_risk",
-        0.0016278723487630486
+        0.012683662585914135
       ],
       [
-        "kyc_status_enc",
-        0.001541860168799758
+        "has_complex_ownership",
+        0.011431615799665451
       ],
       [
         "pep_exposure_score",
-        0.0011964234290644526
+        0.008697962388396263
+      ],
+      [
+        "activity_tier_enc",
+        0.008688786067068577
+      ],
+      [
+        "account_status_enc",
+        0.007840530946850777
+      ],
+      [
+        "shell_company_flag",
+        0.0037379395216703415
+      ],
+      [
+        "account_type_enc",
+        0.003156545339152217
+      ],
+      [
+        "kyc_status_enc",
+        0.0014483032282441854
+      ],
+      [
+        "shares_address_with_sanctioned",
+        0.0
       ]
     ],
     "model_path": "/home/mihajlo/Mihajlo/Projekti/garaza/project/exports/model_multiclass.ubj"
   },
   "learnability": {
     "is_learnable": true,
-    "threshold_used": 0.85
+    "threshold_used": 0.9
   },
   "features_used": [
     "account_type_enc",
@@ -229,11 +221,9 @@
     "is_pep",
     "has_complex_ownership",
     "shell_company_flag",
-    "name_match_type_enc",
     "activity_tier_enc",
     "account_status_enc",
     "match_score",
-    "hops_to_sanctioned",
     "shares_address_with_sanctioned",
     "pep_exposure_score",
     "country_risk_score",
@@ -243,12 +233,6 @@
     "behavioural_risk",
     "relationship_network_risk",
     "overall_risk_score",
-    "override_applied",
-    "static_threshold",
-    "dynamic_t_block",
-    "dynamic_t_review",
-    "static_verdict_enc",
-    "dynamic_verdict_enc",
-    "verdicts_differ"
+    "override_applied"
   ]
 }

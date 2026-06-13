@@ -54,7 +54,7 @@
   "explanatory_logs_complete": true,
   "comparison_summary_complete": true,
   "export_complete": true,
-  "last_updated": "2026-06-13T23:31:33",
+  "last_updated": "2026-06-13T23:54:48",
   "notes": [
     "sanctions/targets.simple.csv: 16 cols (id,schema,name,aliases,birth_date,countries,addresses,identifiers,sanctions,phones,emails,program_ids,dataset,first_seen,last_seen,last_change). No crypto_addresses col \u2014 CryptoWallet entities have addresses in identifiers.",
     "entities.ftm.json: multi-line JSON objects, boundary = '{' at col 0. Schemas: Person,Organization,Company,LegalEntity,Vessel,Address,Ownership,Family,Directorship,UnknownLink,Airplane,Security.",

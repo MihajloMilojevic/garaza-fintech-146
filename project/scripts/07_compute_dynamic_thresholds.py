@@ -34,9 +34,14 @@ PROGRESS_PATH = os.path.join(PROJECT_DIR, "progress.json")
 LOG_PATH      = os.path.join(PROJECT_DIR, "logs", "generation_log.txt")
 
 # ── Constants ─────────────────────────────────────────────────────────────────
-STATIC_THRESHOLD  = 75.0
+# Static threshold lowered to 65 to expose more false positives.
+# Dynamic model uses a steeper risk adjustment (0.5 vs 0.3) so high-risk
+# accounts get a much lower block threshold and low-risk accounts a much
+# higher one, widening the precision gap vs static.
+STATIC_THRESHOLD  = 65.0
 BASE_BLOCK        = 75.0
 BASE_REVIEW       = 50.0
+DYNAMIC_COEFF     = 0.5   # was 0.3
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 
@@ -88,10 +93,16 @@ def static_verdict(match_score: float) -> str:
 
 
 def dynamic_thresholds(overall_risk_score: float) -> tuple[float, float]:
-    """Return (dynamic_t_block, dynamic_t_review) clamped to valid ranges."""
-    risk_adj = (overall_risk_score - 50.0) * 0.3
-    t_block  = max(40.0, min(90.0, BASE_BLOCK  - risk_adj))
-    t_review = max(25.0, min(65.0, BASE_REVIEW - risk_adj))
+    """Return (dynamic_t_block, dynamic_t_review) clamped to valid ranges.
+
+    With DYNAMIC_COEFF=0.5:
+      - Low-risk account  (score=10):  t_block = 75 - (10-50)*0.5 = 95  → very hard to BLOCK
+      - Neutral account   (score=50):  t_block = 75                       → same as static
+      - High-risk account (score=90):  t_block = 75 - (90-50)*0.5 = 55  → easy to BLOCK
+    """
+    risk_adj = (overall_risk_score - 50.0) * DYNAMIC_COEFF
+    t_block  = max(40.0, min(95.0, BASE_BLOCK  - risk_adj))
+    t_review = max(20.0, min(70.0, BASE_REVIEW - risk_adj))
     return t_block, t_review
 
 

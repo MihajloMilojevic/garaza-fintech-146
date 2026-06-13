@@ -505,3 +505,142 @@ BLOCK        47
 2026-06-14T01:42:50 [INFO] Results saved → /home/mihajlo/Mihajlo/Projekti/garaza/project/exports/xgb_results.json
 2026-06-14T01:42:50 [INFO] Markdown report saved → /home/mihajlo/Mihajlo/Projekti/garaza/project/exports/xgb_report.md
 2026-06-14T01:42:50 [INFO] === 11_train_xgboost.py finished ===
+2026-06-14T01:54:17 [INFO] === 07_compute_dynamic_thresholds.py started ===
+2026-06-14T01:54:17 [INFO] Loading screening results …
+2026-06-14T01:54:17 [INFO]   39938 screening results loaded.
+2026-06-14T01:54:17 [INFO] Inserting threshold decisions …
+2026-06-14T01:54:17 [INFO]   Inserted rows 1–2000
+2026-06-14T01:54:17 [INFO]   Inserted rows 2001–4000
+2026-06-14T01:54:17 [INFO]   Inserted rows 4001–6000
+2026-06-14T01:54:17 [INFO]   Inserted rows 6001–8000
+2026-06-14T01:54:17 [INFO]   Inserted rows 8001–10000
+2026-06-14T01:54:17 [INFO]   Inserted rows 10001–12000
+2026-06-14T01:54:17 [INFO]   Inserted rows 12001–14000
+2026-06-14T01:54:17 [INFO]   Inserted rows 14001–16000
+2026-06-14T01:54:17 [INFO]   Inserted rows 16001–18000
+2026-06-14T01:54:17 [INFO]   Inserted rows 18001–20000
+2026-06-14T01:54:17 [INFO]   Inserted rows 20001–22000
+2026-06-14T01:54:17 [INFO]   Inserted rows 22001–24000
+2026-06-14T01:54:17 [INFO]   Inserted rows 24001–26000
+2026-06-14T01:54:17 [INFO]   Inserted rows 26001–28000
+2026-06-14T01:54:17 [INFO]   Inserted rows 28001–30000
+2026-06-14T01:54:17 [INFO]   Inserted rows 30001–32000
+2026-06-14T01:54:17 [INFO]   Inserted rows 32001–34000
+2026-06-14T01:54:17 [INFO]   Inserted rows 34001–36000
+2026-06-14T01:54:17 [INFO]   Inserted rows 36001–38000
+2026-06-14T01:54:17 [INFO]   Inserted rows 38001–39938
+2026-06-14T01:54:17 [INFO] verdicts_differ count: 3266 (8.2%)
+2026-06-14T01:54:17 [INFO]   static verdict distribution: {'CLEAR': 33132, 'REVIEW': 2742, 'BLOCK': 4064}
+2026-06-14T01:54:17 [INFO]   dynamic verdict distribution: {'CLEAR': 35134, 'REVIEW': 1998, 'BLOCK': 2806}
+2026-06-14T01:54:17 [INFO] progress.json updated: threshold_decisions_complete=true
+2026-06-14T01:54:17 [INFO] === 07_compute_dynamic_thresholds.py finished ===
+2026-06-14T01:54:17 [INFO] === 09_comparison_report.py started ===
+2026-06-14T01:54:17 [INFO] Building dataset summary …
+2026-06-14T01:54:17 [INFO] Building threshold comparison …
+2026-06-14T01:54:17 [INFO] Building risk score distribution …
+2026-06-14T01:54:17 [INFO] Building key metrics …
+2026-06-14T01:54:17 [INFO] Markdown report written to: /home/mihajlo/Mihajlo/Projekti/garaza/project/comparison_summary.md
+2026-06-14T01:54:17 [INFO] JSON report written to: /home/mihajlo/Mihajlo/Projekti/garaza/project/comparison_summary.json
+2026-06-14T01:54:17 [INFO] progress.json updated: comparison_summary_complete=true
+2026-06-14T01:54:17 [INFO] === 09_comparison_report.py finished ===
+2026-06-14T01:54:23 [INFO] === 11_train_xgboost.py started ===
+2026-06-14T01:54:23 [INFO] Loading data from database …
+2026-06-14T01:54:23 [INFO] Loaded 20,000 rows.
+2026-06-14T01:54:23 [INFO] Label distribution:
+verdict_ground_truth
+CLEAR     19047
+REVIEW      906
+BLOCK        47
+2026-06-14T01:54:23 [INFO] Multiclass encoding: {'BLOCK': np.int64(0), 'CLEAR': np.int64(1), 'REVIEW': np.int64(2)}
+2026-06-14T01:54:23 [INFO] Binary: 47 BLOCK, 19953 non-BLOCK. scale_pos_weight=424.5
+2026-06-14T01:54:23 [INFO] Training binary model (BLOCK vs not-BLOCK) …
+2026-06-14T01:54:24 [INFO] Binary — in-sample classification report:
+2026-06-14T01:54:24 [INFO] Binary — in-sample ROC-AUC: 1.0000
+2026-06-14T01:54:24 [INFO] Binary — running 5-fold CV …
+2026-06-14T01:54:25 [INFO] Binary — CV ROC-AUC: 0.9999 ± 0.0001
+2026-06-14T01:54:25 [INFO] Binary — CV F1:      0.9610 ± 0.0372
+2026-06-14T01:54:25 [INFO] Binary — top 10 features by importance:
+2026-06-14T01:54:25 [INFO]   pep_sanctions_risk                  0.8382
+2026-06-14T01:54:25 [INFO]   match_score                         0.1231
+2026-06-14T01:54:25 [INFO]   overall_risk_score                  0.0251
+2026-06-14T01:54:25 [INFO]   override_applied                    0.0060
+2026-06-14T01:54:25 [INFO]   account_type_enc                    0.0027
+2026-06-14T01:54:25 [INFO]   relationship_network_risk           0.0012
+2026-06-14T01:54:25 [INFO]   account_status_enc                  0.0012
+2026-06-14T01:54:25 [INFO]   geographic_risk                     0.0006
+2026-06-14T01:54:25 [INFO]   pep_exposure_score                  0.0005
+2026-06-14T01:54:25 [INFO]   kyc_status_enc                      0.0003
+2026-06-14T01:54:25 [INFO] Binary model saved → /home/mihajlo/Mihajlo/Projekti/garaza/project/exports/model_binary.ubj
+2026-06-14T01:54:25 [INFO] Training multiclass model (BLOCK / REVIEW / CLEAR) …
+2026-06-14T01:54:25 [INFO] Multiclass — in-sample classification report:
+2026-06-14T01:54:25 [INFO] Multiclass — running 5-fold CV (macro-F1) …
+2026-06-14T01:54:26 [INFO] Multiclass — CV macro-F1: 0.9964 ± 0.0066
+2026-06-14T01:54:26 [INFO] Multiclass — top 10 features by importance:
+2026-06-14T01:54:26 [INFO]   overall_risk_score                  0.4175
+2026-06-14T01:54:26 [INFO]   pep_sanctions_risk                  0.1525
+2026-06-14T01:54:26 [INFO]   country_risk_score                  0.0791
+2026-06-14T01:54:26 [INFO]   match_score                         0.0651
+2026-06-14T01:54:26 [INFO]   override_applied                    0.0573
+2026-06-14T01:54:26 [INFO]   kyc_completeness                    0.0515
+2026-06-14T01:54:26 [INFO]   is_pep                              0.0389
+2026-06-14T01:54:26 [INFO]   identity_kyc_risk                   0.0334
+2026-06-14T01:54:26 [INFO]   relationship_network_risk           0.0247
+2026-06-14T01:54:26 [INFO]   geographic_risk                     0.0223
+2026-06-14T01:54:26 [INFO] Multiclass model saved → /home/mihajlo/Mihajlo/Projekti/garaza/project/exports/model_multiclass.ubj
+2026-06-14T01:54:26 [INFO] Learnability check: CV ROC-AUC=0.9999 (threshold=0.9) → PASS
+2026-06-14T01:54:26 [INFO] Results saved → /home/mihajlo/Mihajlo/Projekti/garaza/project/exports/xgb_results.json
+2026-06-14T01:54:26 [INFO] Markdown report saved → /home/mihajlo/Mihajlo/Projekti/garaza/project/exports/xgb_report.md
+2026-06-14T01:54:26 [INFO] === 11_train_xgboost.py finished ===
+2026-06-14T01:54:32 [INFO] === 10_export.py started ===
+2026-06-14T01:54:32 [INFO] export_complete=true — nothing to do.
+2026-06-14T01:54:38 [INFO] === 10_export.py started ===
+2026-06-14T01:54:38 [INFO] export_complete=true — nothing to do.
+2026-06-14T01:54:46 [INFO] === 10_export.py started ===
+2026-06-14T01:54:47 [INFO] Exporting: accounts
+2026-06-14T01:54:47 [INFO]   Reading table: accounts
+2026-06-14T01:54:47 [INFO]     20,000 rows, 19 columns
+2026-06-14T01:54:47 [INFO]     Written 0.7 MB → accounts.parquet
+2026-06-14T01:54:47 [INFO] Exporting: account_relationships
+2026-06-14T01:54:47 [INFO]   Reading table: account_relationships
+2026-06-14T01:54:47 [INFO]     13,088 rows, 8 columns
+2026-06-14T01:54:47 [INFO]     Written 0.2 MB → account_relationships.parquet
+2026-06-14T01:54:47 [INFO] Exporting: wallets
+2026-06-14T01:54:47 [INFO]   Reading table: wallets
+2026-06-14T01:54:47 [INFO]     3,379 rows, 7 columns
+2026-06-14T01:54:47 [INFO]     Written 0.1 MB → wallets.parquet
+2026-06-14T01:54:47 [INFO] Exporting: transactions
+2026-06-14T01:54:47 [INFO]   Reading table: transactions
+2026-06-14T01:54:48 [INFO]     199,387 rows, 18 columns
+2026-06-14T01:54:48 [INFO]     Written 5.6 MB → transactions.parquet
+2026-06-14T01:54:48 [INFO] Exporting: screening_results
+2026-06-14T01:54:48 [INFO]   Reading table: screening_results
+2026-06-14T01:54:48 [INFO]     39,938 rows, 13 columns
+2026-06-14T01:54:48 [INFO]     Written 0.5 MB → screening_results.parquet
+2026-06-14T01:54:48 [INFO] Exporting: risk_scores
+2026-06-14T01:54:48 [INFO]   Reading table: risk_scores
+2026-06-14T01:54:48 [INFO]     20,000 rows, 12 columns
+2026-06-14T01:54:48 [INFO]     Written 0.5 MB → risk_scores.parquet
+2026-06-14T01:54:48 [INFO] Exporting: threshold_decisions
+2026-06-14T01:54:48 [INFO]   Reading table: threshold_decisions
+2026-06-14T01:54:48 [INFO]     39,938 rows, 9 columns
+2026-06-14T01:54:48 [INFO]     Written 0.5 MB → threshold_decisions.parquet
+2026-06-14T01:54:48 [INFO] Exporting: explanatory_logs
+2026-06-14T01:54:48 [INFO]   Reading table: explanatory_logs
+2026-06-14T01:54:48 [INFO]     3,378 rows, 5 columns
+2026-06-14T01:54:48 [INFO]     Written 0.1 MB → explanatory_logs.parquet
+2026-06-14T01:54:48 [INFO] Written: /home/mihajlo/Mihajlo/Projekti/garaza/project/exports/load_dataset.py
+2026-06-14T01:54:48 [INFO] Written: /home/mihajlo/Mihajlo/Projekti/garaza/project/exports/README.md
+2026-06-14T01:54:48 [INFO] Written: /home/mihajlo/Mihajlo/Projekti/garaza/.gitignore
+2026-06-14T01:54:48 [INFO] Written: /home/mihajlo/Mihajlo/Projekti/garaza/.gitattributes
+2026-06-14T01:54:48 [INFO] Export summary:
+2026-06-14T01:54:48 [INFO]   accounts: 20,000 rows
+2026-06-14T01:54:48 [INFO]   account_relationships: 13,088 rows
+2026-06-14T01:54:48 [INFO]   wallets: 3,379 rows
+2026-06-14T01:54:48 [INFO]   transactions: 199,387 rows
+2026-06-14T01:54:48 [INFO]   screening_results: 39,938 rows
+2026-06-14T01:54:48 [INFO]   risk_scores: 20,000 rows
+2026-06-14T01:54:48 [INFO]   threshold_decisions: 39,938 rows
+2026-06-14T01:54:48 [INFO]   explanatory_logs: 3,378 rows
+2026-06-14T01:54:48 [INFO]   Total rows across all tables: 339,108
+2026-06-14T01:54:48 [INFO] progress.json updated: export_complete=true
+2026-06-14T01:54:48 [INFO] === 10_export.py finished ===

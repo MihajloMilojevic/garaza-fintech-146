@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-13T23:31:26",
+  "generated_at": "2026-06-13T23:54:17",
   "dataset_summary": {
     "row_counts": {
       "accounts": 20000,
@@ -27,31 +27,32 @@
   },
   "threshold_comparison": {
     "total_decisions": 39938,
-    "verdicts_differ_count": 1639,
-    "verdicts_differ_pct": 4.1,
+    "verdicts_differ_count": 3266,
+    "verdicts_differ_pct": 8.18,
     "confusion_matrix": {
-      "CLEAR_static_CLEAR_dynamic": 33119,
-      "REVIEW_static_REVIEW_dynamic": 2397,
-      "BLOCK_static_BLOCK_dynamic": 2783,
-      "BLOCK_static_REVIEW_dynamic": 330,
-      "REVIEW_static_CLEAR_dynamic": 1282,
-      "REVIEW_static_BLOCK_dynamic": 14,
-      "CLEAR_static_REVIEW_dynamic": 13
+      "CLEAR_static_CLEAR_dynamic": 33101,
+      "REVIEW_static_REVIEW_dynamic": 773,
+      "BLOCK_static_BLOCK_dynamic": 2798,
+      "BLOCK_static_REVIEW_dynamic": 1194,
+      "REVIEW_static_CLEAR_dynamic": 1961,
+      "CLEAR_static_REVIEW_dynamic": 31,
+      "BLOCK_static_CLEAR_dynamic": 72,
+      "REVIEW_static_BLOCK_dynamic": 8
     },
     "static_tp": 1763,
-    "static_fp": 1350,
+    "static_fp": 2301,
     "static_fn": 0,
-    "static_tn": 36825,
-    "static_precision": 0.5663,
+    "static_tn": 35874,
+    "static_precision": 0.4338,
     "static_recall": 1.0,
-    "static_f1": 0.7231,
+    "static_f1": 0.6051,
     "dynamic_tp": 1763,
-    "dynamic_fp": 1034,
+    "dynamic_fp": 1043,
     "dynamic_fn": 0,
-    "dynamic_tn": 37141,
-    "dynamic_precision": 0.6303,
+    "dynamic_tn": 37132,
+    "dynamic_precision": 0.6283,
     "dynamic_recall": 1.0,
-    "dynamic_f1": 0.7732
+    "dynamic_f1": 0.7717
   },
   "risk_distribution": {
     "band_counts": {
@@ -76,13 +77,13 @@
     }
   },
   "key_metrics": {
-    "static_precision": 0.5663,
+    "static_precision": 0.4338,
     "static_recall": 1.0,
-    "static_f1": 0.7231,
-    "dynamic_precision": 0.6303,
+    "static_f1": 0.6051,
+    "dynamic_precision": 0.6283,
     "dynamic_recall": 1.0,
-    "dynamic_f1": 0.7732,
-    "verdicts_differ_count": 1639,
-    "verdicts_differ_pct": 4.1
+    "dynamic_f1": 0.7717,
+    "verdicts_differ_count": 3266,
+    "verdicts_differ_pct": 8.18
   }
 }

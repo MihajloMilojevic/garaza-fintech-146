@@ -1,0 +1,102 @@
+{
+  "model_name": "sanctions_screening_risk_threshold",
+  "version": "1.0.0",
+  "trained_at": "2026-06-14",
+  "description": "Two-model XGBoost ensemble for sanctions screening. Produces per-account dynamic block and review thresholds based on risk profile, plus a BLOCK/REVIEW/CLEAR verdict when given a match score.",
+
+  "thresholds": {
+    "description": "Two dynamic thresholds are computed per account from overall_risk_score. The match_score from the screening system is then compared against them.",
+    "formula": {
+      "risk_adjustment": "(overall_risk_score - 50) * 0.5",
+      "t_block":  "clamp(75 - risk_adjustment, 40, 95)",
+      "t_review": "clamp(50 - risk_adjustment, 20, 70)"
+    },
+    "decision_zones": {
+      "BLOCK":  "match_score >= t_block  — automatic block, no human review",
+      "REVIEW": "t_review <= match_score < t_block  — routed to human analyst",
+      "CLEAR":  "match_score < t_review  — automatic pass"
+    },
+    "examples": [
+      {"overall_risk_score": 10,  "t_block": 95.0, "t_review": 70.0, "note": "very low-risk: almost nothing can block"},
+      {"overall_risk_score": 50,  "t_block": 75.0, "t_review": 50.0, "note": "neutral: same as static baseline"},
+      {"overall_risk_score": 90,  "t_block": 55.0, "t_review": 30.0, "note": "high-risk: triggers easily"}
+    ]
+  },
+
+  "models": {
+    "binary": {
+      "file": "model_binary.ubj",
+      "objective": "binary:logistic",
+      "task": "Detect BLOCK vs not-BLOCK. Positive class = BLOCK.",
+      "cv_roc_auc": 0.9999,
+      "cv_f1_block": 0.961,
+      "scale_pos_weight": 424.5
+    },
+    "multiclass": {
+      "file": "model_multiclass.ubj",
+      "objective": "multi:softprob",
+      "classes": ["BLOCK", "CLEAR", "REVIEW"],
+      "task": "Three-class verdict. Preferred for final decision output.",
+      "cv_macro_f1": 0.9964
+    }
+  },
+
+  "input_features": [
+    {"name": "account_type_enc",            "type": "int",   "encoding": "individual=0, business=1"},
+    {"name": "kyc_completeness",             "type": "float", "range": [0.0, 1.0]},
+    {"name": "kyc_status_enc",              "type": "int",   "encoding": "complete=0, partial=1, pending=2, expired=3"},
+    {"name": "is_pep",                       "type": "int",   "encoding": "0 or 1"},
+    {"name": "has_complex_ownership",        "type": "int",   "encoding": "0 or 1"},
+    {"name": "shell_company_flag",           "type": "int",   "encoding": "0 or 1"},
+    {"name": "activity_tier_enc",           "type": "int",   "encoding": "low=0, medium=1, high=2"},
+    {"name": "account_status_enc",          "type": "int",   "encoding": "active=0, suspended=1, closed=2"},
+    {"name": "match_score",                  "type": "float", "range": [0.0, 100.0], "source": "screening system (Jaro-Winkler or equivalent, scaled 0-100)"},
+    {"name": "shares_address_with_sanctioned","type": "int",  "encoding": "0 or 1"},
+    {"name": "pep_exposure_score",           "type": "float", "range": [0.0, 100.0]},
+    {"name": "country_risk_score",           "type": "float", "range": [0.0, 100.0], "source": "country_risk.csv composite score"},
+    {"name": "geographic_risk",              "type": "float", "range": [0.0, 100.0], "source": "risk score component"},
+    {"name": "identity_kyc_risk",            "type": "float", "range": [0.0, 100.0], "source": "risk score component"},
+    {"name": "pep_sanctions_risk",           "type": "float", "range": [0.0, 100.0], "source": "risk score component — highest importance (0.84)"},
+    {"name": "behavioural_risk",             "type": "float", "range": [0.0, 100.0], "source": "risk score component"},
+    {"name": "relationship_network_risk",    "type": "float", "range": [0.0, 100.0], "source": "risk score component"},
+    {"name": "overall_risk_score",           "type": "float", "range": [0.0, 100.0], "note": "ALSO drives threshold calculation — must be computed first"},
+    {"name": "override_applied",             "type": "int",   "encoding": "0 or 1"}
+  ],
+
+  "output_schema": {
+    "verdict": "BLOCK | REVIEW | CLEAR",
+    "t_block": "float — block threshold for this account",
+    "t_review": "float — review threshold for this account",
+    "match_score": "float — echo of input match_score",
+    "overall_risk_score": "float — echo of input overall_risk_score",
+    "block_probability": "float — P(BLOCK) from binary model",
+    "class_probabilities": {"BLOCK": "float", "CLEAR": "float", "REVIEW": "float"},
+    "risk_components": {
+      "geographic_risk": "float",
+      "identity_kyc_risk": "float",
+      "pep_sanctions_risk": "float",
+      "behavioural_risk": "float",
+      "relationship_network_risk": "float"
+    },
+    "feature_contributions": [
+      {"feature": "string", "importance": "float", "value": "float", "contribution_pct": "float"}
+    ],
+    "audit_narrative": "string — human-readable explanation of the decision",
+    "audit_factors": ["string — top contributing factor sentences"]
+  },
+
+  "feature_importances_binary": {
+    "pep_sanctions_risk": 0.838,
+    "match_score": 0.123,
+    "overall_risk_score": 0.025,
+    "override_applied": 0.006
+  },
+  "feature_importances_multiclass": {
+    "overall_risk_score": 0.418,
+    "pep_sanctions_risk": 0.153,
+    "country_risk_score": 0.079,
+    "match_score": 0.065,
+    "override_applied": 0.057,
+    "kyc_completeness": 0.052
+  }
+}

@@ -23,6 +23,9 @@ def list_screening(
 
     df = dl.screening_merged.copy()
 
+    # Only transaction-context screenings (account-only screenings excluded)
+    df = df[df["screening_context"] == "transaction"]
+
     if verdict:
         df = df[df["dynamic_verdict"] == verdict.upper()]
     if context:

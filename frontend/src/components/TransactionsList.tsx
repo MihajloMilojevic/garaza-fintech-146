@@ -1,41 +1,48 @@
 import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { TRANSACTIONS, type TxRisk } from "@/data/transactions";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { RISK_COLORS } from "./GraphPanel";
+import { TopNav } from "./TopNav";
+import { qk } from "@/lib/api/queries";
+import { verdictToRisk } from "@/lib/api/client";
 
-const RISK_LABEL: Record<TxRisk, string> = {
+const RISK_LABEL = {
   low: "Low Risk",
   medium: "For Review",
   high: "High Risk",
-};
+} as const;
 
 export function TransactionsList() {
-  const total = TRANSACTIONS.length;
-  const highCount = TRANSACTIONS.filter((t) => t.risk === "high").length;
-  const mediumCount = TRANSACTIONS.filter((t) => t.risk === "medium").length;
-  const lowCount = TRANSACTIONS.filter((t) => t.risk === "low").length;
-  const firstMedium = TRANSACTIONS.find((t) => t.risk === "medium");
+  const { data } = useSuspenseQuery(qk.screeningList({ limit: 50 }));
+  const items = data.results;
+
+  const total = data.total;
+  const highCount = items.filter((t) => t.verdict === "BLOCK").length;
+  const mediumCount = items.filter((t) => t.verdict === "REVIEW").length;
+  const lowCount = items.filter((t) => t.verdict === "CLEAR").length;
+  const firstReview = items.find((t) => t.verdict === "REVIEW");
 
   return (
     <div className="min-h-dvh w-full bg-slate-50 p-6 text-slate-900">
       <style>{LIST_STYLES}</style>
       <div className="mx-auto flex max-w-[1600px] flex-col gap-6">
+        <TopNav />
         <header className="ai-btn-premium relative overflow-hidden flex flex-col gap-6 rounded-2xl p-8 md:flex-row md:items-center md:justify-between">
           <div aria-hidden="true" className="ai-orb-top" />
           <div aria-hidden="true" className="ai-orb-left-mid" />
           <div className="relative z-20 space-y-3">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-300">
-              Dashboard
+              Screening Queue
             </p>
-            <h1 className="text-3xl font-bold tracking-tight text-white">Transactions</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-white">Screening Events</h1>
             <p className="text-base text-slate-300">
-              {total} transactions · select one to inspect its risk graph.
+              {total.toLocaleString()} matching events · select one to inspect its risk graph.
             </p>
           </div>
           <div className="relative z-20 grid grid-cols-3 gap-3">
-            <StatPill label="High" count={highCount} color={RISK_COLORS.high.solid} />
-            <StatPill label="Medium" count={mediumCount} color={RISK_COLORS.medium.solid} />
-            <StatPill label="Low" count={lowCount} color={RISK_COLORS.low.solid} />
+            <StatPill label="Block" count={highCount} color={RISK_COLORS.high.solid} />
+            <StatPill label="Review" count={mediumCount} color={RISK_COLORS.medium.solid} />
+            <StatPill label="Clear" count={lowCount} color={RISK_COLORS.low.solid} />
           </div>
         </header>
 
@@ -48,25 +55,25 @@ export function TransactionsList() {
                 AI Assistant
               </p>
               <h2 className="text-3xl font-bold tracking-tight text-white">
-                Smart Transaction Approving
+                Smart Screening Review
               </h2>
               <p className="text-base text-slate-300">
-                Step through medium-risk transactions one by one. Nexus AI surfaces
-                context, signals, and a recommended action for each — approve or
-                block in seconds.
+                Step through REVIEW-zone screenings one by one. Nexus AI surfaces
+                context, signals, and a recommended action for each — clear or block
+                in seconds.
               </p>
             </div>
-            {firstMedium ? (
+            {firstReview ? (
               <Link
                 to="/transactions/$id"
-                params={{ id: firstMedium.id }}
+                params={{ id: firstReview.screening_id }}
                 className="inline-flex items-center justify-center rounded-xl bg-white px-6 py-4 text-sm font-bold uppercase tracking-wider text-slate-900 transition-all hover:bg-slate-100 hover:shadow-[0_8px_32px_-8px_rgba(255,255,255,0.4)]"
               >
                 Start Review →
               </Link>
             ) : (
               <span className="inline-flex items-center justify-center rounded-xl bg-white/10 px-6 py-4 text-sm font-bold uppercase tracking-wider text-slate-400">
-                No medium-risk transactions
+                No review-zone events
               </span>
             )}
           </div>
@@ -77,18 +84,18 @@ export function TransactionsList() {
           style={{ boxShadow: "inset 0 2px 16px 0 rgba(0,68,254,0.13)" }}
         >
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-slate-800">All transactions</h2>
+            <h2 className="text-xl font-bold text-slate-800">All screening events</h2>
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-              Showing {total}
+              Showing {items.length} / {total.toLocaleString()}
             </span>
           </div>
 
           <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-            <div className="col-span-3">Transaction</div>
-            <div className="col-span-3">Merchant</div>
-            <div className="col-span-2">Amount</div>
-            <div className="col-span-2">Country</div>
-            <div className="col-span-2 text-right">Risk</div>
+            <div className="col-span-3">Screening</div>
+            <div className="col-span-3">Account</div>
+            <div className="col-span-2">Match Score</div>
+            <div className="col-span-2">Context</div>
+            <div className="col-span-2 text-right">Verdict</div>
           </div>
 
           <motion.ul
@@ -97,18 +104,15 @@ export function TransactionsList() {
             animate="visible"
             variants={{
               hidden: {},
-              visible: {
-                transition: {
-                  staggerChildren: 0.04,
-                },
-              },
+              visible: { transition: { staggerChildren: 0.04 } },
             }}
           >
-            {TRANSACTIONS.map((t) => {
-              const c = RISK_COLORS[t.risk];
+            {items.map((t) => {
+              const risk = verdictToRisk(t.verdict);
+              const c = RISK_COLORS[risk];
               return (
                 <motion.li
-                  key={t.id}
+                  key={t.screening_id}
                   variants={{
                     hidden: { opacity: 0, y: 12, scale: 0.98 },
                     visible: {
@@ -121,21 +125,28 @@ export function TransactionsList() {
                 >
                   <Link
                     to="/transactions/$id"
-                    params={{ id: t.id }}
+                    params={{ id: t.screening_id }}
                     className="grid grid-cols-12 gap-4 items-center rounded-xl border border-slate-200 bg-white px-4 py-4 transition-all hover:border-[#0044fe] hover:shadow-[0_8px_24px_-12px_rgba(0,68,254,0.35)]"
                   >
                     <div className="col-span-12 md:col-span-3">
-                      <div className="font-mono text-sm font-bold text-slate-900">{t.id}</div>
-                      <div className="text-xs text-slate-500">{t.timestamp}</div>
+                      <div className="font-mono text-sm font-bold text-slate-900">{t.screening_id}</div>
+                      <div className="text-xs text-slate-500">
+                        {new Date(t.screened_at).toLocaleString()}
+                      </div>
                     </div>
-                    <div className="col-span-6 md:col-span-3 text-sm font-semibold text-slate-700">
-                      {t.merchant}
+                    <div className="col-span-6 md:col-span-3 font-mono text-sm font-semibold text-slate-700">
+                      {t.account_id}
                     </div>
                     <div className="col-span-6 md:col-span-2 text-base font-bold text-slate-900">
-                      {t.amount}
+                      {t.match_score.toFixed(2)}
                     </div>
                     <div className="col-span-6 md:col-span-2 text-sm text-slate-600">
-                      {t.country}
+                      {t.context}
+                      {t.verdicts_differ && (
+                        <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-amber-700">
+                          AI≠rule
+                        </span>
+                      )}
                     </div>
                     <div className="col-span-6 md:col-span-2 flex md:justify-end">
                       <span
@@ -146,11 +157,8 @@ export function TransactionsList() {
                           border: `1px solid ${c.solid}40`,
                         }}
                       >
-                        <span
-                          className="h-2 w-2 rounded-full"
-                          style={{ background: c.solid }}
-                        />
-                        {RISK_LABEL[t.risk]} · {t.riskScore}
+                        <span className="h-2 w-2 rounded-full" style={{ background: c.solid }} />
+                        {RISK_LABEL[risk]} · {t.match_score.toFixed(1)}
                       </span>
                     </div>
                   </Link>
@@ -158,6 +166,9 @@ export function TransactionsList() {
               );
             })}
           </motion.ul>
+          {items.length === 0 && (
+            <p className="py-12 text-center text-sm text-slate-500">No screening events found.</p>
+          )}
         </div>
       </div>
     </div>

@@ -136,12 +136,45 @@ export interface Transaction {
   velocity_30d_amount: number;
   is_first_time_recipient: number;
 }
+
+export interface TransactionGraphNode {
+  id: string;
+  type: "source" | "account" | "wallet" | "external";
+  label: string;
+  overall_risk_score?: number;
+  risk_band?: string;
+  latest_verdict?: Verdict;
+  country_residence?: string;
+  country?: string;
+  is_sanctioned?: boolean;
+  chain?: string;
+  transaction_count?: number;
+  total_amount?: number;
+  avg_amount?: number;
+}
+export interface TransactionGraphEdge {
+  from: string;
+  to: string;
+  transaction_count: number;
+  total_amount: number;
+}
+export interface TransactionGraph {
+  node_count: number;
+  edge_count: number;
+  nodes: TransactionGraphNode[];
+  edges: TransactionGraphEdge[];
+}
+
 export interface TransactionsResponse {
   account_id: string;
   total: number;
   page: number;
   limit: number;
   transactions: Transaction[];
+  transaction_graph: TransactionGraph;
+  summary: Record<string, unknown>;
+  relationships: Array<Record<string, unknown>>;
+  relationship_count: number;
 }
 
 export interface ScreeningListItem {

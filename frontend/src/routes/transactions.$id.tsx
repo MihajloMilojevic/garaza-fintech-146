@@ -1,27 +1,27 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Dashboard } from "@/components/Dashboard";
-import { TRANSACTIONS } from "@/data/transactions";
+import { qk } from "@/lib/api/queries";
 
 export const Route = createFileRoute("/transactions/$id")({
-  head: ({ params }) => {
-    const tx = TRANSACTIONS.find((t) => t.id === params.id);
-    const title = tx ? `${tx.id} — Risk Analysis` : "Transaction — Risk Analysis";
-    const description = tx
-      ? `Risk analysis for ${tx.id} (${tx.amount}, ${tx.merchant}).`
-      : "Risk analysis for transaction.";
-    return {
-      meta: [
-        { title },
-        { name: "description", content: description },
-        { property: "og:title", content: title },
-        { property: "og:description", content: description },
-      ],
-    };
+  ssr: false,
+  head: ({ params }) => ({
+    meta: [
+      { title: `${params.id} — Risk Analysis` },
+      { name: "description", content: `Risk analysis for screening ${params.id}.` },
+      { property: "og:title", content: `${params.id} — Risk Analysis` },
+      { property: "og:description", content: `Risk analysis for screening ${params.id}.` },
+    ],
+  }),
+  loader: ({ context, params }) => {
+    context.queryClient.ensureQueryData(qk.screening(params.id));
   },
   component: TransactionDetail,
+  errorComponent: ({ error }) => (
+    <div className="p-8 text-sm text-rose-600">Failed to load screening: {error.message}</div>
+  ),
 });
 
 function TransactionDetail() {
   const { id } = Route.useParams();
-  return <Dashboard txId={id} />;
+  return <Dashboard screeningId={id} />;
 }

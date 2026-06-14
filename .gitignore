@@ -2,3 +2,19 @@ data/raw/
 *.db
 __pycache__/
 *.pyc
+*.pyo
+
+# Node / Puppeteer (root-level, used for dev tooling only)
+node_modules/
+package-lock.json
+package.json
+
+# Frontend build output
+frontend/dist/
+frontend/node_modules/
+
+# Env files
+frontend/.env
+frontend/.env.local
+.env
+.env.local

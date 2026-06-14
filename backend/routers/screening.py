@@ -143,12 +143,17 @@ def get_screening(screening_id: str):
     }
 
     model_result = run_screen(features)
-    t_block  = model_result["t_block"]
-    t_review = model_result["t_review"]
-    risk     = features["overall_risk_score"]
-    adj      = (risk - 50.0) * 0.5
-    t_block_raw  = 75.0 - adj
-    t_review_raw = 50.0 - adj
+
+    # Use stored verdict/thresholds/match_score from the dataset record —
+    # the live model re-run may compute different thresholds and disagree
+    # with what was stored. The model result is used only for explanatory
+    # fields (narrative, factors, probabilities, contributions).
+    stored_verdict     = scr.get("dynamic_verdict")
+    stored_match_score = float(scr.get("match_score") or 0.0)
+    stored_t_block     = float(scr.get("dynamic_t_block") or 0.0)
+    stored_t_review    = float(scr.get("dynamic_t_review") or 0.0)
+
+    risk = features["overall_risk_score"]
 
     sender = {
         "account_id":        account_id,
@@ -164,22 +169,21 @@ def get_screening(screening_id: str):
     return clean({
         "screening_id":  screening_id,
         "account_id":    account_id,
-        "verdict":       model_result["verdict"],
-        "match_score":   model_result["match_score"],
+        "verdict":       stored_verdict,
+        "match_score":   stored_match_score,
         "context":       scr.get("screening_context"),
         "screened_at":   screened_at,
         "transaction":   transaction,
         "sender":        sender,
         "threshold_decision": {
-            "t_block":   t_block,
-            "t_review":  t_review,
-            "match_score": model_result["match_score"],
-            "verdict":   model_result["verdict"],
+            "t_block":     stored_t_block,
+            "t_review":    stored_t_review,
+            "match_score": stored_match_score,
+            "verdict":     stored_verdict,
             "formula": {
                 "overall_risk_score": risk,
-                "adjustment":        f"({risk} - 50.0) * 0.5 = {adj:.2f}",
-                "t_block_raw":       f"75.0 - {adj:.2f} = {t_block_raw:.4f} -> clamped to {t_block}",
-                "t_review_raw":      f"50.0 - {adj:.2f} = {t_review_raw:.4f} -> clamped to {t_review}",
+                "t_block":  stored_t_block,
+                "t_review": stored_t_review,
             },
         },
         "audit_narrative":       model_result["audit_narrative"],

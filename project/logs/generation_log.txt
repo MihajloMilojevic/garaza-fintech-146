@@ -644,3 +644,107 @@ BLOCK        47
 2026-06-14T01:54:48 [INFO]   Total rows across all tables: 339,108
 2026-06-14T01:54:48 [INFO] progress.json updated: export_complete=true
 2026-06-14T01:54:48 [INFO] === 10_export.py finished ===
+2026-06-14T12:58:49 [INFO] === 12_add_threshold_noise.py started ===
+2026-06-14T12:58:49 [INFO]   RNG seed        : 42
+2026-06-14T12:58:49 [INFO]   sigma_block     : 4.0
+2026-06-14T12:58:49 [INFO]   sigma_review    : 3.5
+2026-06-14T12:58:49 [INFO]   outer clamps    : t_block in [10.0, 95.0]  t_review in [5.0, 95.0]
+2026-06-14T12:58:49 [INFO]   ordering fix    : if t_review >= t_block → t_review = t_block - 1
+2026-06-14T12:58:49 [INFO] Loading threshold_decisions.parquet …
+2026-06-14T12:58:49 [INFO]   39938 rows loaded
+2026-06-14T12:58:49 [INFO] Loading screening_results.parquet (for match_score lookup) …
+2026-06-14T12:58:49 [INFO] --- BEFORE noise ---
+2026-06-14T12:58:49 [INFO]   dynamic_t_block: mean=88.154  std=7.172  min=52.521  max=95.000
+2026-06-14T12:58:49 [INFO]   dynamic_t_review: mean=63.154  std=7.172  min=27.521  max=70.000
+2026-06-14T12:58:49 [INFO]   gap (t_block-t_review): mean=25.000  std=0.00002
+2026-06-14T12:58:49 [INFO]   dynamic_verdict CLEAR: 35134 (88.0%)
+2026-06-14T12:58:49 [INFO]   dynamic_verdict BLOCK: 2806 (7.0%)
+2026-06-14T12:58:49 [INFO]   dynamic_verdict REVIEW: 1998 (5.0%)
+2026-06-14T12:58:49 [INFO]   verdicts_differ=1: 3266 (8.2%)
+2026-06-14T12:58:49 [INFO]   ordering fix applied to 0 rows
+2026-06-14T12:58:49 [INFO] --- AFTER noise ---
+2026-06-14T12:58:49 [INFO]   dynamic_t_block: mean=87.772  std=7.751  min=41.340  max=95.000
+2026-06-14T12:58:49 [INFO]   dynamic_t_review: mean=63.123  std=7.959  min=17.675  max=86.711
+2026-06-14T12:58:49 [INFO]   gap (t_block-t_review): mean=24.650  std=4.958
+2026-06-14T12:58:49 [INFO]   dynamic_verdict CLEAR: 35091 (87.9%)
+2026-06-14T12:58:49 [INFO]   dynamic_verdict BLOCK: 2820 (7.1%)
+2026-06-14T12:58:49 [INFO]   dynamic_verdict REVIEW: 2027 (5.1%)
+2026-06-14T12:58:49 [INFO]   verdicts_differ=1: 3220 (8.1%)
+2026-06-14T12:58:49 [INFO] Writing /home/mihajlo/Mihajlo/Projekti/garaza/project/exports/threshold_decisions.parquet …
+2026-06-14T12:58:49 [INFO]   parquet written.
+2026-06-14T12:58:49 [INFO] Updating SQLite at /home/mihajlo/Mihajlo/Projekti/garaza/project/sanctions_screening.db …
+2026-06-14T12:58:49 [INFO]   Updated rows 1–2000
+2026-06-14T12:58:49 [INFO]   Updated rows 2001–4000
+2026-06-14T12:58:49 [INFO]   Updated rows 4001–6000
+2026-06-14T12:58:49 [INFO]   Updated rows 6001–8000
+2026-06-14T12:58:49 [INFO]   Updated rows 8001–10000
+2026-06-14T12:58:49 [INFO]   Updated rows 10001–12000
+2026-06-14T12:58:49 [INFO]   Updated rows 12001–14000
+2026-06-14T12:58:49 [INFO]   Updated rows 14001–16000
+2026-06-14T12:58:49 [INFO]   Updated rows 16001–18000
+2026-06-14T12:58:49 [INFO]   Updated rows 18001–20000
+2026-06-14T12:58:49 [INFO]   Updated rows 20001–22000
+2026-06-14T12:58:49 [INFO]   Updated rows 22001–24000
+2026-06-14T12:58:49 [INFO]   Updated rows 24001–26000
+2026-06-14T12:58:49 [INFO]   Updated rows 26001–28000
+2026-06-14T12:58:49 [INFO]   Updated rows 28001–30000
+2026-06-14T12:58:49 [INFO]   Updated rows 30001–32000
+2026-06-14T12:58:49 [INFO]   Updated rows 32001–34000
+2026-06-14T12:58:49 [INFO]   Updated rows 34001–36000
+2026-06-14T12:58:49 [INFO]   Updated rows 36001–38000
+2026-06-14T12:58:49 [INFO]   Updated rows 38001–39938
+2026-06-14T12:58:49 [INFO] SQLite updated.
+2026-06-14T12:58:49 [INFO] === 12_add_threshold_noise.py finished ===
+2026-06-14T13:00:17 [INFO] === 13_train_threshold_regressor.py started ===
+2026-06-14T13:00:17 [INFO]   XGBoost version: 3.2.0
+2026-06-14T13:00:17 [INFO]   Two separate XGBRegressors (block + review)
+2026-06-14T13:00:17 [INFO] Loading parquet files …
+2026-06-14T13:00:18 [INFO]   td:39938  sr:39938  rs:20000  acc:20000  tx:199387
+2026-06-14T13:00:18 [INFO]   Merged dataset: 39938 rows, 35 columns
+2026-06-14T13:00:18 [INFO]   Feature matrix shape: (39938, 26)
+2026-06-14T13:00:18 [INFO]   NaN in X: 0
+2026-06-14T13:00:18 [INFO]   Model params: {'n_estimators': 400, 'max_depth': 5, 'learning_rate': 0.05, 'subsample': 0.8, 'colsample_bytree': 0.8, 'min_child_weight': 5, 'reg_alpha': 0.1, 'reg_lambda': 1.0, 'random_state': 42, 'n_jobs': -1, 'tree_method': 'hist'}
+2026-06-14T13:00:18 [INFO] --- CV for t_block ---
+2026-06-14T13:00:18 [INFO]     fold 1: MAE=2.881  RMSE=3.567  R²=0.7853
+2026-06-14T13:00:18 [INFO]     fold 2: MAE=2.840  RMSE=3.542  R²=0.7957
+2026-06-14T13:00:19 [INFO]     fold 3: MAE=2.829  RMSE=3.517  R²=0.7906
+2026-06-14T13:00:19 [INFO]     fold 4: MAE=2.861  RMSE=3.544  R²=0.7916
+2026-06-14T13:00:20 [INFO]     fold 5: MAE=2.856  RMSE=3.531  R²=0.7934
+2026-06-14T13:00:20 [INFO]   MEAN  MAE=2.853 ± 0.018  RMSE=3.540 ± 0.016  R²=0.7913
+2026-06-14T13:00:20 [INFO] --- CV for t_review ---
+2026-06-14T13:00:20 [INFO]     fold 1: MAE=2.824  RMSE=3.559  R²=0.7997
+2026-06-14T13:00:21 [INFO]     fold 2: MAE=2.791  RMSE=3.508  R²=0.8066
+2026-06-14T13:00:21 [INFO]     fold 3: MAE=2.816  RMSE=3.533  R²=0.7995
+2026-06-14T13:00:22 [INFO]     fold 4: MAE=2.803  RMSE=3.516  R²=0.8044
+2026-06-14T13:00:23 [INFO]     fold 5: MAE=2.827  RMSE=3.556  R²=0.8034
+2026-06-14T13:00:23 [INFO]   MEAN  MAE=2.812 ± 0.013  RMSE=3.535 ± 0.021  R²=0.8027
+2026-06-14T13:00:23 [INFO] Training final models on full dataset …
+2026-06-14T13:00:24 [INFO]   Training complete.
+2026-06-14T13:00:24 [INFO] --- Feature importances (t_block) ---
+2026-06-14T13:00:24 [INFO]   overall_risk_score                 : 0.3890
+2026-06-14T13:00:24 [INFO]   override_applied                   : 0.2658
+2026-06-14T13:00:24 [INFO]   pep_sanctions_risk                 : 0.1689
+2026-06-14T13:00:24 [INFO]   geographic_risk                    : 0.0445
+2026-06-14T13:00:24 [INFO]   has_complex_ownership              : 0.0366
+2026-06-14T13:00:24 [INFO]   identity_kyc_risk                  : 0.0165
+2026-06-14T13:00:24 [INFO]   behavioural_risk                   : 0.0156
+2026-06-14T13:00:24 [INFO]   kyc_completeness                   : 0.0105
+2026-06-14T13:00:24 [INFO]   is_pep                             : 0.0040
+2026-06-14T13:00:24 [INFO]   relationship_network_risk          : 0.0036
+2026-06-14T13:00:24 [INFO] --- Feature importances (t_review) ---
+2026-06-14T13:00:24 [INFO]   overall_risk_score                 : 0.3280
+2026-06-14T13:00:24 [INFO]   override_applied                   : 0.3217
+2026-06-14T13:00:24 [INFO]   pep_sanctions_risk                 : 0.1551
+2026-06-14T13:00:24 [INFO]   has_complex_ownership              : 0.0492
+2026-06-14T13:00:24 [INFO]   geographic_risk                    : 0.0449
+2026-06-14T13:00:24 [INFO]   identity_kyc_risk                  : 0.0215
+2026-06-14T13:00:24 [INFO]   behavioural_risk                   : 0.0182
+2026-06-14T13:00:24 [INFO]   kyc_status_enc                     : 0.0108
+2026-06-14T13:00:24 [INFO]   kyc_completeness                   : 0.0064
+2026-06-14T13:00:24 [INFO]   is_pep                             : 0.0045
+2026-06-14T13:00:24 [INFO]   Saved: /home/mihajlo/Mihajlo/Projekti/garaza/ai/model/model_threshold_regressor_block.ubj
+2026-06-14T13:00:24 [INFO]   Saved: /home/mihajlo/Mihajlo/Projekti/garaza/ai/model/model_threshold_regressor_review.ubj
+2026-06-14T13:00:24 [INFO]   Updated model_metadata.json (v2)
+2026-06-14T13:00:24 [INFO] === 13_train_threshold_regressor.py finished ===
+2026-06-14T13:00:24 [INFO]   t_block  CV: MAE=2.853  RMSE=3.540  R²=0.7913
+2026-06-14T13:00:24 [INFO]   t_review CV: MAE=2.812  RMSE=3.535  R²=0.8027

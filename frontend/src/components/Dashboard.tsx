@@ -1,0 +1,691 @@
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { AnimatePresence, motion } from "framer-motion";
+import { toast } from "sonner";
+import { GraphPanel, RISK_COLORS, type GraphNode, type Edge } from "./GraphPanel";
+import { TRANSACTIONS } from "@/data/transactions";
+
+const TRIGGERED_RULES = [
+  { id: "R-204", label: "Geo Mismatch", severity: "high" as const },
+  { id: "R-118", label: "High Amount", severity: "high" as const },
+  { id: "R-077", label: "New Device", severity: "medium" as const },
+  { id: "R-051", label: "Velocity 24h", severity: "medium" as const },
+  { id: "R-012", label: "Sanctions Watch", severity: "high" as const },
+];
+
+// Returns "approve" | "review" | "block" based on score
+function getRiskDecision(score: number): "approve" | "review" | "block" {
+  if (score >= 75) return "block";
+  if (score >= 40) return "review";
+  return "approve";
+}
+
+// Derive RiskBadge appearance entirely from numeric score
+function getBadgeStyle(score: number): { label: string; bg: string } {
+  if (score >= 75)
+    return {
+      label: "High Risk",
+      bg: "linear-gradient(135deg, #f87171, #dc2626)",
+    };
+  if (score >= 40)
+    return {
+      label: "For Review",
+      bg: "linear-gradient(135deg, #fbbf24, #d97706)",
+    };
+  return {
+    label: "Low Risk",
+    bg: "linear-gradient(135deg, #34d399, #059669)",
+  };
+}
+
+function getDecisionBadgeStyle(
+  decision: "approve" | "block",
+): { label: string; bg: string } {
+  if (decision === "approve")
+    return {
+      label: "Approved",
+      bg: "linear-gradient(135deg, #34d399, #059669)",
+    };
+  return {
+    label: "Blocked",
+    bg: "linear-gradient(135deg, #f87171, #dc2626)",
+  };
+}
+
+export function Dashboard({ txId }: { txId?: string } = {}) {
+  const TX =
+    TRANSACTIONS.find((t) => t.id === txId) ?? TRANSACTIONS[0];
+
+  // Build a deterministic graph from the full transaction list. Layout is
+  // identical on every entry — the selected TX is only highlighted, not
+  // re-centered. Uses a two-ring arrangement around a fixed anchor.
+  const { nodes, edges } = useMemo(() => {
+    const anchor = TRANSACTIONS[0];
+    const rest = TRANSACTIONS.slice(1);
+    const innerCount = Math.min(5, rest.length);
+    const inner = rest.slice(0, innerCount);
+    const outer = rest.slice(innerCount);
+
+    const center: GraphNode = {
+      id: anchor.id,
+      label: anchor.merchant,
+      x: 50,
+      y: 50,
+      radius: 28,
+      risk: anchor.risk,
+      type: "Transaction",
+      value: anchor.amount,
+      country: anchor.country,
+      riskScore: anchor.riskScore,
+      flags: [],
+      description: `${anchor.amount} to ${anchor.merchant} (${anchor.country}).`,
+    };
+
+    const place = (
+      list: typeof rest,
+      rx: number,
+      ry: number,
+      radius: number,
+      phase: number,
+    ): GraphNode[] =>
+      list.map((t, i) => {
+        const angle = (i / list.length) * Math.PI * 2 - Math.PI / 2 + phase;
+        return {
+          id: t.id,
+          label: t.merchant,
+          x: 50 + Math.cos(angle) * rx,
+          y: 50 + Math.sin(angle) * ry,
+          radius,
+          risk: t.risk,
+          type: "Transaction",
+          value: t.amount,
+          country: t.country,
+          riskScore: t.riskScore,
+          flags: [],
+          description: `${t.amount} to ${t.merchant} (${t.country}).`,
+        };
+      });
+
+    const innerNodes = place(inner, 22, 20, 22, 0);
+    const outerNodes = place(outer, 40, 38, 18, Math.PI / outer.length);
+    const nodes = [center, ...innerNodes, ...outerNodes];
+
+    const edges: Edge[] = [];
+    // Spokes from center to inner ring
+    innerNodes.forEach((n) => edges.push({ from: center.id, to: n.id }));
+    // Inner ring loop
+    for (let i = 0; i < innerNodes.length; i++) {
+      edges.push({
+        from: innerNodes[i].id,
+        to: innerNodes[(i + 1) % innerNodes.length].id,
+      });
+    }
+    // Each outer node connects to its two nearest inner anchors
+    outerNodes.forEach((n, i) => {
+      if (innerNodes.length === 0) return;
+      const a = innerNodes[i % innerNodes.length];
+      const b = innerNodes[(i + 1) % innerNodes.length];
+      edges.push({ from: a.id, to: n.id });
+      edges.push({ from: b.id, to: n.id });
+    });
+    // Outer ring loop for extra density
+    for (let i = 0; i < outerNodes.length; i++) {
+      edges.push({
+        from: outerNodes[i].id,
+        to: outerNodes[(i + 1) % outerNodes.length].id,
+      });
+    }
+    // Country clusters across the whole graph
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        if (
+          nodes[i].country === nodes[j].country &&
+          nodes[i].country &&
+          nodes[i].country !== "—"
+        ) {
+          edges.push({ from: nodes[i].id, to: nodes[j].id });
+        }
+      }
+    }
+    return { nodes, edges };
+  }, []);
+
+  const [selectedId, setSelectedId] = useState<string | null>(TX.id);
+  useEffect(() => {
+    setSelectedId(TX.id);
+  }, [TX.id]);
+  const activeId =
+    selectedId && nodes.some((n) => n.id === selectedId) ? selectedId : TX.id;
+  const node = nodes.find((n) => n.id === activeId) ?? null;
+  const connections = node
+    ? edges.filter((e) => e.from === node.id || e.to === node.id).map((e) =>
+        e.from === node.id ? e.to : e.from,
+      )
+    : [];
+  const connectedNodes = connections
+    .map((id) => nodes.find((n) => n.id === id))
+    .filter((n): n is NonNullable<typeof n> => Boolean(n));
+
+  const risk = node ? RISK_COLORS[node.risk] : null;
+  const decision = getRiskDecision(TX.riskScore);
+
+  const mediumTxs = useMemo(
+    () => TRANSACTIONS.filter((t) => t.risk === "medium"),
+    []
+  );
+  const nextMediumTx = useMemo(() => {
+    const idx = mediumTxs.findIndex((t) => t.id === TX.id);
+    return mediumTxs[(idx + 1) % mediumTxs.length];
+  }, [mediumTxs, TX.id]);
+
+  const navigate = useNavigate();
+  const [decisions, setDecisions] = useState<Record<string, "approve" | "block">>({});
+  const decisionForTx = decisions[TX.id];
+  const handleDecision = (action: "approve" | "block") => {
+    if (action === "approve") {
+      toast.success(`${TX.id} approved`, {
+        description: `${TX.amount} to ${TX.merchant} released.`,
+      });
+    } else {
+      toast.error(`${TX.id} blocked`, {
+        description: `${TX.amount} to ${TX.merchant} blocked.`,
+      });
+    }
+    setDecisions((d) => ({ ...d, [TX.id]: action }));
+    // Wait for AI panel fade-out to finish, then advance to the next medium tx.
+    window.setTimeout(() => {
+      navigate({ to: "/transactions/$id", params: { id: nextMediumTx.id } });
+    }, 650);
+  };
+
+  return (
+    <div className="h-dvh w-full bg-slate-50 p-6 text-slate-900">
+      <style>{AI_PANEL_STYLES}</style>
+      <div className="mx-auto flex max-w-[1600px] flex-col gap-6">
+        <header className="ai-btn-premium relative overflow-hidden flex flex-col gap-6 rounded-2xl p-8 md:flex-row md:items-center md:justify-between">
+          <div aria-hidden="true" className="ai-orb-top" />
+          <div aria-hidden="true" className="ai-orb-left-mid" />
+          <div className="relative z-20 space-y-3">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-300">
+              Transaction Risk Analysis
+            </p>
+            <div className="flex flex-wrap items-baseline gap-4">
+              <h1 className="font-mono text-3xl font-bold tracking-tight text-white">{TX.id}</h1>
+              <span className="text-base text-slate-300">{TX.timestamp}</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              <RiskBadge score={TX.riskScore} decision={decisionForTx} />
+              <span className="px-1 text-xl font-semibold text-white">{TX.amount}</span>
+            </div>
+          </div>
+
+          <div className="relative z-20 flex flex-wrap items-center gap-3">
+            {decisionForTx === "approve" || (TX.risk === "low" && !decisionForTx) ? (
+              <RiskBadge score={TX.riskScore} decision="approve" />
+            ) : decisionForTx === "block" || TX.risk === "high" ? (
+              <RiskBadge score={TX.riskScore} decision="block" />
+            ) : (
+              <Link
+                to="/transactions/$id"
+                params={{ id: nextMediumTx.id }}
+                className="inline-flex items-center gap-2 rounded-xl bg-amber-500/15 px-6 py-3 text-base font-bold text-amber-400 ring-1 ring-amber-500/30 transition-colors hover:bg-amber-500/25"
+              >
+                Next
+              </Link>
+            )}
+          </div>
+        </header>
+
+        <div className="grid grid-cols-12 gap-6">
+          <aside className="col-span-12 lg:col-span-3">
+            <div className="sokin-panel-dark h-180 flex flex-col rounded-2xl p-6">
+              <div aria-hidden="true" className="sokin-orb-bottom-dark" />
+              <div aria-hidden="true" className="sokin-orb-top-dark" />
+              <div aria-hidden="true" className="sokin-orb-left-mid-dark" />
+              {node && risk ? (
+                <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-6 no-scrollbar">
+                  <div className="relative z-20">
+                    <h3 className="text-2xl font-bold text-white">{node.label}</h3>
+                    <p className="text-base text-slate-300">
+                      {node.type}
+                    </p>
+                  </div>
+
+                  <div className="relative z-20 grid grid-cols-2 gap-3">
+                    <Metric label="Risk Score" value={`${node.riskScore} / 100`} />
+                    <Metric label="Country" value={node.country} />
+                    <Metric label="Type" value={node.type} />
+                    <Metric label="Identifier" value={node.value} />
+                  </div>
+
+                  <div className="relative z-20">
+                    <p className="mb-3 text-xs font-bold uppercase tracking-wider text-[#ff6b7a]">
+                      Connections · {connectedNodes.length}
+                    </p>
+                    <ul className="space-y-1">
+                      {connectedNodes.map((c) => (
+                        <li key={c.id}>
+                          <button
+                            onClick={() => setSelectedId(c.id)}
+                            className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-left transition-colors hover:bg-white/5"
+                          >
+                            <span className="flex items-center gap-3 text-base font-medium">
+                              <span
+                                className="h-2.5 w-2.5 rounded-full"
+                                style={{ background: RISK_COLORS[c.risk].solid }}
+                              />
+                              <span className="text-slate-100">{c.label}</span>
+                            </span>
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                              {c.type}
+                            </span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ) : (
+                <div className="relative z-20 py-12 text-center">
+                  <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-gradient-to-br from-[#ff8a96] to-[#c8102e]" />
+                  <p className="text-base font-semibold text-white">No entity selected</p>
+                  <p className="mt-1 text-sm text-slate-300">
+                    Click any entity in the graph to inspect it.
+                  </p>
+                </div>
+              )}
+            </div>
+          </aside>
+
+          <div className="col-span-12 lg:col-span-9 flex gap-6">
+            <main className="flex-1 min-w-0">
+              <div className="flex h-180 flex-col rounded-2xl border border-[#c8102e] bg-white p-6" style={{ boxShadow: "inset 0 2px 16px 0 rgba(200,16,46,0.13)" }}>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-xl font-bold text-slate-800">Risk Graph</h2>
+                <div className="flex gap-4 text-xs font-bold uppercase tracking-wider text-slate-500">
+                  <span className="flex items-center gap-2">
+                    <span className="h-2.5 w-2.5 rounded-full" style={{ background: RISK_COLORS.low.solid }} />
+                    Low
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <span className="h-2.5 w-2.5 rounded-full" style={{ background: RISK_COLORS.medium.solid }} />
+                    Medium
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <span className="h-2.5 w-2.5 rounded-full" style={{ background: RISK_COLORS.high.solid }} />
+                    High
+                  </span>
+                </div>
+              </div>
+                <div className="relative flex-1 overflow-hidden rounded-xl">
+                  <GraphPanel selectedId={activeId} onSelect={setSelectedId} nodes={nodes} edges={edges} />
+                </div>
+              </div>
+            </main>
+
+            <AnimatePresence mode="wait">
+              {TX.risk === "medium" && !decisionForTx && (
+                <motion.aside
+                  key={TX.id}
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: "33.3333%", opacity: 1 }}
+                  exit={{
+                    opacity: 0,
+                    width: 0,
+                    transition: { duration: 0.5, ease: "easeIn" },
+                  }}
+                  transition={{
+                    width: { duration: 0.7, delay: 1, ease: "easeOut" },
+                    opacity: { duration: 0.5, delay: 1, ease: "easeOut" },
+                  }}
+                  className="shrink-0 overflow-hidden"
+                >
+                  <div className="h-full w-full pl-0">
+                    <AiSummaryPanel
+                      onApprove={() => handleDecision("approve")}
+                      onBlock={() => handleDecision("block")}
+                    />
+                  </div>
+                </motion.aside>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// FIXED: Metric cards now share the exact same 'ai-btn-premium' architecture, padding scales, and color weights
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="sokin-btn-premium rounded-xl px-4 py-3.5 flex flex-col justify-between">
+      <div className="relative z-10 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+        {label}
+      </div>
+      <div className="relative z-10 mt-1 text-base font-bold text-white tracking-wide truncate">
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function RiskBadge({
+  score,
+  decision,
+}: {
+  score: number;
+  decision?: "approve" | "block";
+}) {
+  const { label, bg } = decision
+    ? getDecisionBadgeStyle(decision)
+    : getBadgeStyle(score);
+  return (
+    <span
+      className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-bold uppercase tracking-wider text-white"
+      style={{ background: bg, boxShadow: "inset 0 1px 8px 0 rgba(0,68,254,0.22)" }}
+    >
+      <span className="h-2 w-2 rounded-full bg-white/90 animate-pulse" />
+      {decision ? label : `${label} · ${score}`}
+    </span>
+  );
+}
+
+function RuleChip({ label, severity }: { label: string; severity: "low" | "medium" | "high" }) {
+  const c = RISK_COLORS[severity];
+  return (
+    <span
+      className="rounded-lg border px-3 py-1 text-sm font-semibold"
+      style={{ borderColor: `${c.solid}40`, color: c.solid, background: `${c.solid}0d` }}
+    >
+      {label}
+    </span>
+  );
+}
+
+const AI_PANEL_STYLES = `
+  @keyframes breathe-bottom {
+    0%   { transform: scale(1)    translate(0%, 0%);    opacity: 0.35; }
+    33%  { transform: scale(1.08) translate(-3%, -4%);  opacity: 0.25; }
+    66%  { transform: scale(1.04) translate(2%, -2%);   opacity: 0.40; }
+    100% { transform: scale(1)    translate(0%, 0%);    opacity: 0.35; }
+  }
+  @keyframes breathe-top {
+    0%   { transform: scale(1)    translate(0%, 0%);    opacity: 0.25; }
+    33%  { transform: scale(1.06) translate(-2%, 3%);   opacity: 0.30; }
+    66%  { transform: scale(1.10) translate(3%, 1%);    opacity: 0.20; }
+    100% { transform: scale(1)    translate(0%, 0%);    opacity: 0.25; }
+  }
+  @keyframes breathe-left {
+    0%   { transform: scale(1)    translate(0%, 0%);    opacity: 0.15; }
+    50%  { transform: scale(1.12) translate(4%, -3%);   opacity: 0.22; }
+    100% { transform: scale(1)    translate(0%, 0%);    opacity: 0.15; }
+  }
+  @keyframes noise-drift {
+    0%   { transform: translate(0, 0); }
+    100% { transform: translate(-10%, -10%); }
+  }
+
+  .ai-orb-bottom {
+    position: absolute;
+    bottom: -20%;
+    right: -20%;
+    width: 75%;
+    height: 75%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 60% 60%, #a4baff 0%, #4d7cff 45%, transparent 75%);
+    filter: blur(38px);
+    animation: breathe-bottom 9s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  .ai-orb-top {
+    position: absolute;
+    top: -15%;
+    right: -15%;
+    width: 60%;
+    height: 60%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 60% 40%, #b3cbff 0%, #4667ff 50%, transparent 75%);
+    filter: blur(44px);
+    animation: breathe-top 11s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  .ai-orb-left-mid {
+    position: absolute;
+    top: 15%;
+    left: -25%;
+    width: 65%;
+    height: 65%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 50%, #c4d5ff 0%, #7aa0e8 55%, transparent 75%);
+    filter: blur(40px);
+    animation: breathe-left 13s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  .ai-orb-bottom::before,
+  .ai-orb-top::before,
+  .ai-orb-left-mid::before,
+  .ai-btn-premium::before,
+  .sokin-orb-bottom::before,
+  .sokin-orb-top::before,
+  .sokin-orb-left-mid::before,
+  .sokin-btn-premium::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.65;
+    filter: contrast(190%);
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E");
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  .ai-orb-bottom::before,
+  .ai-orb-top::before,
+  .ai-orb-left-mid::before,
+  .sokin-orb-bottom::before,
+  .sokin-orb-top::before,
+  .sokin-orb-left-mid::before {
+    border-radius: 50%;
+    animation: noise-drift 8s linear infinite alternate;
+  }
+
+  /* Shared structure styles for metrics cards and action button */
+  .ai-btn-premium {
+    position: relative;
+    overflow: hidden;
+    background: #0f172a;
+    border: 1px solid #334155;
+    box-shadow: 
+      inset 0 1px 0 0 rgba(255,255,255,0.1),
+      inset 0 -12px 24px -4px rgba(0,68,254,0.2),
+      0 4px 20px -2px rgba(15,23,42,0.3);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .ai-btn-premium::before {
+    border-radius: 12px;
+    opacity: 0.45;
+  }
+  .sokin-btn-premium::before {
+    border-radius: 12px;
+    opacity: 0.35;
+  }
+
+  /* Hover interactive state scoped dynamically to clickable variant button objects only */
+  button.ai-btn-premium:hover {
+    background: #1e293b;
+    border-color: #475569;
+    box-shadow: 
+      inset 0 1px 0 0 rgba(255,255,255,0.15),
+      inset 0 -12px 28px 0px rgba(0,68,254,0.35),
+      0 8px 24px -2px rgba(0,68,254,0.15);
+    transform: translateY(-1px);
+  }
+
+  button.ai-btn-premium:active {
+    transform: translateY(0px);
+  }
+
+  .sokin-panel {
+    position: relative; overflow: hidden;
+    background: #ffffff;
+    border: 1px solid rgba(200,16,46,0.18);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255,255,255,0.9),
+      0 12px 32px -8px rgba(200,16,46,0.18);
+  }
+  .sokin-orb-bottom {
+    position: absolute; bottom: -20%; right: -20%;
+    width: 75%; height: 75%; border-radius: 50%;
+    background: radial-gradient(circle at 60% 60%, #ffd4d8 0%, #ff8a96 45%, transparent 75%);
+    filter: blur(38px); animation: breathe-bottom 9s ease-in-out infinite;
+    pointer-events: none; z-index: 10;
+  }
+  .sokin-orb-top {
+    position: absolute; top: -15%; right: -15%;
+    width: 60%; height: 60%; border-radius: 50%;
+    background: radial-gradient(circle at 60% 40%, #ffdde0 0%, #ffa3ad 50%, transparent 75%);
+    filter: blur(44px); animation: breathe-top 11s ease-in-out infinite;
+    pointer-events: none; z-index: 10;
+  }
+  .sokin-orb-left-mid {
+    position: absolute; top: 15%; left: -25%;
+    width: 65%; height: 65%; border-radius: 50%;
+    background: radial-gradient(circle at 30% 50%, #ffe5e8 0%, #ffb8c0 55%, transparent 75%);
+    filter: blur(40px); animation: breathe-left 13s ease-in-out infinite;
+    pointer-events: none; z-index: 10;
+  }
+  .sokin-btn-premium {
+    position: relative; overflow: hidden;
+    background: #4a0610;
+    border: 1px solid #8e1322;
+    box-shadow:
+      inset 0 1px 0 0 rgba(255,255,255,0.1),
+      inset 0 -12px 24px -4px rgba(200,16,46,0.35),
+      0 4px 20px -2px rgba(74,6,16,0.3);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  button.sokin-btn-premium:hover {
+    background: #6a0d18;
+    border-color: #a91529;
+    box-shadow:
+      inset 0 1px 0 0 rgba(255,255,255,0.15),
+      inset 0 -12px 28px 0px rgba(200,16,46,0.55),
+      0 8px 24px -2px rgba(200,16,46,0.25);
+    transform: translateY(-1px);
+  }
+  button.sokin-btn-premium:active {
+    transform: translateY(0px);
+  }
+
+  .sokin-panel-dark {
+    position: relative; overflow: hidden;
+    background: radial-gradient(120% 90% at 80% 10%, #e23048 0%, #c8102e 28%, #8e1322 55%, #4a0610 100%);
+    border: 1px solid rgba(226,48,72,0.55);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255,255,255,0.12),
+      inset 0 -12px 24px -4px rgba(226,48,72,0.35),
+      0 12px 32px -8px rgba(200,16,46,0.45);
+  }
+  .sokin-orb-bottom-dark {
+    position: absolute; bottom: -20%; right: -20%;
+    width: 75%; height: 75%; border-radius: 50%;
+    background: radial-gradient(circle at 60% 60%, #ff8a96 0%, #c8102e 45%, transparent 75%);
+    filter: blur(38px); animation: breathe-bottom 9s ease-in-out infinite;
+    pointer-events: none; z-index: 10; opacity: 0.55;
+  }
+  .sokin-orb-top-dark {
+    position: absolute; top: -15%; right: -15%;
+    width: 60%; height: 60%; border-radius: 50%;
+    background: radial-gradient(circle at 60% 40%, #ffa3ad 0%, #a91529 50%, transparent 75%);
+    filter: blur(44px); animation: breathe-top 11s ease-in-out infinite;
+    pointer-events: none; z-index: 10; opacity: 0.5;
+  }
+  .sokin-orb-left-mid-dark {
+    position: absolute; top: 15%; left: -25%;
+    width: 65%; height: 65%; border-radius: 50%;
+    background: radial-gradient(circle at 30% 50%, #ffb8c0 0%, #8e1322 55%, transparent 75%);
+    filter: blur(40px); animation: breathe-left 13s ease-in-out infinite;
+    pointer-events: none; z-index: 10; opacity: 0.45;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+`;
+
+function AiSummaryPanel({
+  onApprove,
+  onBlock,
+}: {
+  onApprove: () => void;
+  onBlock: () => void;
+}) {
+  return (
+    <div className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-[#c8102e] bg-white">
+      {/* Ambient Glow Layout */}
+      <div aria-hidden="true" className="sokin-orb-bottom" />
+      <div aria-hidden="true" className="sokin-orb-top" />
+      <div aria-hidden="true" className="sokin-orb-left-mid" />
+
+      <div className="relative z-20 p-6 pb-4">
+        <p className="mb-2 text-s font-bold uppercase tracking-[0.18em] text-[#c8102e]">
+          AI Assistant
+        </p>
+        <h2 className="text-xl font-bold text-slate-900">Transaction Summary</h2>
+      </div>
+
+      <div className="relative z-20 flex-1 overflow-hidden rounded-b-2xl flex flex-col justify-between">
+        
+        {/* Scrollable insights window */}
+        <div className="overflow-y-auto p-6 pt-2 space-y-8 mb-24">
+          <section>
+            <h3 className="mb-3 text-base font-bold text-slate-900">Overall Verdict</h3>
+            <p className="text-sm leading-relaxed text-slate-600">
+              This transaction exhibits a{" "}
+              <strong className="text-slate-900">high-risk profile</strong> with a composite score of{" "}
+              <strong className="text-[#c8102e]">87/100</strong>. Multiple independent risk signals
+              converge on the same outcome, making manual review strongly advised before approval.
+            </p>
+          </section>
+
+          <section>
+            <h3 className="mb-2 text-base font-bold text-slate-900">Recommended Action</h3>
+            <p className="text-sm leading-relaxed text-slate-600">
+              Hold the transfer and request source-of-funds documentation. Escalate beneficiary match
+              to Level-2 sanctions review.
+            </p>
+          </section>
+        </div>
+
+        {/* Dynamic Action Box absolute anchored to bottom edge */}
+        <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-white via-white/95 to-transparent p-6 pt-10 space-y-3">
+          <button
+            onClick={onApprove}
+            className="sokin-btn-premium w-full rounded-xl py-3.5 text-center text-base font-bold text-white tracking-wide"
+          >
+            Approve
+          </button>
+          <button
+            onClick={onBlock}
+            className="w-full rounded-xl border border-[#c8102e]/30 bg-white py-3.5 text-center text-base font-bold text-[#c8102e] tracking-wide transition-colors hover:bg-[#c8102e]/5 hover:border-[#c8102e]/50"
+          >
+            Block
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
+}

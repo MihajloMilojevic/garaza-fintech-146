@@ -1,88 +1,38 @@
 interface Props {
-  tBlock: number
-  tReview: number
-  matchScore: number
+  t_review: number;
+  t_block: number;
+  match_score: number;
 }
 
-export function ThresholdBar({ tBlock, tReview, matchScore }: Props) {
-  const greenW  = `${tReview}%`
-  const amberW  = `${tBlock - tReview}%`
-  const redW    = `${100 - tBlock}%`
-  const dotLeft = `${matchScore}%`
+export function ThresholdBar({ t_review, t_block, match_score }: Props) {
+  const greenW = `${t_review}%`;
+  const amberW = `${Math.max(0, t_block - t_review)}%`;
+  const redW = `${Math.max(0, 100 - t_block)}%`;
+  const dot = `${Math.max(0, Math.min(100, match_score))}%`;
 
   return (
-    <div className="w-full space-y-2">
-      {/* Bar */}
-      <div className="relative h-8 flex rounded-lg overflow-visible">
-        <div className="h-full bg-green-400 rounded-l-lg" style={{ width: greenW }} />
-        <div className="h-full bg-amber-400" style={{ width: amberW }} />
-        <div className="h-full bg-red-400 rounded-r-lg" style={{ width: redW }} />
-
-        {/* match_score marker */}
-        <div
-          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 z-10"
-          style={{ left: dotLeft }}
-        >
-          <div className="w-4 h-4 bg-white border-2 border-gray-800 rounded-full shadow-lg" />
+    <div className="space-y-2">
+      <div className="relative h-6 w-full overflow-hidden rounded-full bg-slate-100">
+        <div className="flex h-full w-full">
+          <div className="h-full bg-emerald-400/70" style={{ width: greenW }} />
+          <div className="h-full bg-amber-400/80" style={{ width: amberW }} />
+          <div className="h-full bg-rose-500/80" style={{ width: redW }} />
         </div>
-
-        {/* t_review line */}
         <div
-          className="absolute top-0 bottom-0 w-0.5 bg-gray-700 z-10"
-          style={{ left: `${tReview}%` }}
-        />
-
-        {/* t_block line */}
-        <div
-          className="absolute top-0 bottom-0 w-0.5 bg-gray-700 z-10"
-          style={{ left: `${tBlock}%` }}
+          className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 h-5 w-5 rounded-full border-2 border-white bg-slate-900 shadow-md"
+          style={{ left: dot }}
+          aria-label={`match score ${match_score.toFixed(1)}`}
         />
       </div>
-
-      {/* Labels row */}
-      <div className="relative h-5 text-xs text-gray-500">
-        <span className="absolute left-0">0</span>
-
-        <span
-          className="absolute -translate-x-1/2 text-gray-700 font-medium"
-          style={{ left: `${tReview}%` }}
-        >
-          t_review {tReview.toFixed(1)}
-        </span>
-
-        <span
-          className="absolute -translate-x-1/2 text-gray-700 font-medium"
-          style={{ left: `${tBlock}%` }}
-        >
-          t_block {tBlock.toFixed(1)}
-        </span>
-
-        <span
-          className="absolute -translate-x-1/2 font-semibold text-gray-800"
-          style={{ left: dotLeft }}
-          title={`match_score = ${matchScore.toFixed(1)}`}
-        >
-          ▲ {matchScore.toFixed(1)}
-        </span>
-
-        <span className="absolute right-0">100</span>
+      <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider text-slate-500">
+        <span>0</span>
+        <span>t_review {t_review.toFixed(1)}</span>
+        <span>t_block {t_block.toFixed(1)}</span>
+        <span>100</span>
       </div>
-
-      {/* Zone legend */}
-      <div className="flex gap-4 text-xs mt-1">
-        <span className="flex items-center gap-1">
-          <span className="inline-block w-3 h-3 rounded-sm bg-green-400" />
-          CLEAR (0 – {tReview.toFixed(1)})
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="inline-block w-3 h-3 rounded-sm bg-amber-400" />
-          REVIEW ({tReview.toFixed(1)} – {tBlock.toFixed(1)})
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="inline-block w-3 h-3 rounded-sm bg-red-400" />
-          BLOCK ({tBlock.toFixed(1)} – 100)
-        </span>
+      <div className="text-sm font-semibold text-slate-700">
+        match score: <span className="font-mono">{match_score.toFixed(2)}</span>
       </div>
     </div>
-  )
+  );
 }

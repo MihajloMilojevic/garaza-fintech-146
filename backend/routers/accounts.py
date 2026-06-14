@@ -259,7 +259,7 @@ def get_transactions(
     if dl.transactions_df is None or dl.accounts_enriched is None:
         raise HTTPException(503, "Data not loaded")
 
-    # ---- Account & risk ----
+    # ---- Account ----
     acct_rows = dl.accounts_enriched[dl.accounts_enriched["account_id"] == account_id]
     if acct_rows.empty:
         raise HTTPException(404, f"Account {account_id} not found")
@@ -297,7 +297,7 @@ def get_transactions(
             s = dl.screening_by_tx.get(tid)
             if s:
                 v = s.get("dynamic_verdict")
-                if v == "BLOCK":   blocked_ids.add(tid)
+                if v == "BLOCK":    blocked_ids.add(tid)
                 elif v == "REVIEW": review_ids.add(tid)
                 elif v == "CLEAR":  clear_ids.add(tid)
 
@@ -306,11 +306,11 @@ def get_transactions(
     amounts     = all_tx["amount"].dropna()
 
     summary = {
-        "total_transactions":    total,
-        "total_sent_amount":     round(float(amounts.sum()), 2) if len(amounts) else 0.0,
+        "total_transactions":     total,
+        "total_sent_amount":      round(float(amounts.sum()), 2) if len(amounts) else 0.0,
         "avg_transaction_amount": round(float(amounts.mean()), 2) if len(amounts) else 0.0,
         "max_transaction_amount": round(float(amounts.max()), 2) if len(amounts) else 0.0,
-        "unique_recipients":     int(
+        "unique_recipients": int(
             all_tx["recipient_account_id"].nunique()
             + all_tx["recipient_wallet_id"].nunique()
             + all_tx[all_tx["recipient_type"] == "external_individual"]["recipient_name"].nunique()
@@ -319,22 +319,18 @@ def get_transactions(
             "first": all_tx["timestamp"].min() if total else None,
             "last":  all_tx["timestamp"].max() if total else None,
         },
-        "payment_rails":         {k: int(v) for k, v in rail_counts.items()},
-        "currencies":            {k: int(v) for k, v in ccy_counts.items()},
+        "payment_rails": {k: int(v) for k, v in rail_counts.items()},
+        "currencies":    {k: int(v) for k, v in ccy_counts.items()},
         "screening_verdicts": {
-            "BLOCK":   len(blocked_ids),
-            "REVIEW":  len(review_ids),
-            "CLEAR":   len(clear_ids),
+            "BLOCK":      len(blocked_ids),
+            "REVIEW":     len(review_ids),
+            "CLEAR":      len(clear_ids),
             "unscreened": total - len(blocked_ids) - len(review_ids) - len(clear_ids),
         },
     }
 
     # ---- Transaction graph ----
-    # Build a node for each unique recipient and an edge aggregating all tx to them.
-    # Nodes: "source" (this account) + one node per unique recipient.
-    # Edges: one per unique recipient.
-
-    risk_lookup = {}  # account_id -> (overall_risk_score, risk_band, full_name, latest_verdict)
+    risk_lookup = {}
     if dl.accounts_enriched is not None:
         for _, r in dl.accounts_enriched[
             ["account_id", "overall_risk_score", "risk_band", "full_name", "latest_verdict"]
@@ -346,15 +342,13 @@ def get_transactions(
                 "latest_verdict":     r.get("latest_verdict"),
             }
 
-    wallet_lookup = {}  # wallet_id OR wallet_address -> wallet row dict
+    wallet_lookup = {}
     if dl.wallets_df is not None:
         for _, w in dl.wallets_df.iterrows():
             wd = w.to_dict()
             wallet_lookup[w["wallet_id"]]      = wd
             wallet_lookup[w["wallet_address"]] = wd
 
-    # Aggregation: key -> {"tx_count", "total_amount", "amounts", "currencies", "rails",
-    #                       "first_ts", "last_ts", "node_type", "node_meta"}
     edge_agg: dict = defaultdict(lambda: {
         "tx_count": 0, "total_amount": 0.0, "amounts": [],
         "currencies": defaultdict(int), "rails": defaultdict(int),
@@ -371,18 +365,13 @@ def get_transactions(
 
         if rtype == "account" and not _is_nan(tx.get("recipient_account_id")):
             key = ("account", tx["recipient_account_id"])
-            meta = risk_lookup.get(tx["recipient_account_id"], {})
             edge_agg[key]["node_type"] = "account"
-            edge_agg[key]["node_meta"] = meta
-
+            edge_agg[key]["node_meta"] = risk_lookup.get(tx["recipient_account_id"], {})
         elif rtype == "crypto_wallet" and not _is_nan(tx.get("recipient_wallet_id")):
             key = ("wallet", tx["recipient_wallet_id"])
-            w = wallet_lookup.get(tx["recipient_wallet_id"], {})
             edge_agg[key]["node_type"] = "wallet"
-            edge_agg[key]["node_meta"] = w
-
+            edge_agg[key]["node_meta"] = wallet_lookup.get(tx["recipient_wallet_id"], {})
         else:
-            # external individual — key on recipient_name; fall back to "unknown"
             rname = tx.get("recipient_name") or "unknown"
             key = ("external", rname)
             edge_agg[key]["node_type"] = "external"
@@ -392,8 +381,8 @@ def get_transactions(
             }
 
         agg = edge_agg[key]
-        agg["tx_count"]      += 1
-        agg["total_amount"]  += float(amt) if amt and not _is_nan(amt) else 0.0
+        agg["tx_count"]     += 1
+        agg["total_amount"] += float(amt) if amt and not _is_nan(amt) else 0.0
         if amt and not _is_nan(amt):
             agg["amounts"].append(float(amt))
         agg["currencies"][ccy] += 1
@@ -402,7 +391,6 @@ def get_transactions(
             agg["first_ts"] = ts if agg["first_ts"] is None else min(agg["first_ts"], ts)
             agg["last_ts"]  = ts if agg["last_ts"]  is None else max(agg["last_ts"],  ts)
 
-    # Source node
     source_node = {
         "id":               account_id,
         "type":             "source",
@@ -420,9 +408,9 @@ def get_transactions(
     edges = []
 
     for (ntype, nid), agg in edge_agg.items():
-        avg_amt  = round(agg["total_amount"] / agg["tx_count"], 2) if agg["tx_count"] else 0.0
+        avg_amt   = round(agg["total_amount"] / agg["tx_count"], 2) if agg["tx_count"] else 0.0
         total_amt = round(agg["total_amount"], 2)
-        meta     = agg["node_meta"]
+        meta      = agg["node_meta"]
 
         if ntype == "account":
             node = {
@@ -440,7 +428,6 @@ def get_transactions(
                 "first_transaction":  agg["first_ts"],
                 "last_transaction":   agg["last_ts"],
             }
-
         elif ntype == "wallet":
             node = {
                 "id":               nid,
@@ -458,8 +445,7 @@ def get_transactions(
                 "first_transaction": agg["first_ts"],
                 "last_transaction":  agg["last_ts"],
             }
-
-        else:  # external
+        else:
             node = {
                 "id":               f"ext:{nid}",
                 "type":             "external",
@@ -475,7 +461,6 @@ def get_transactions(
             }
 
         nodes.append(node)
-
         to_id = nid if ntype != "external" else f"ext:{nid}"
         edges.append({
             "from":              account_id,
@@ -490,7 +475,6 @@ def get_transactions(
             "last_transaction":  agg["last_ts"],
         })
 
-    # Sort edges by transaction_count descending
     edges.sort(key=lambda e: e["transaction_count"], reverse=True)
 
     transaction_graph = {
@@ -500,33 +484,33 @@ def get_transactions(
         "edges": edges,
     }
 
-    # ---- Known relationships (ownership / family / associate / directorship) ----
+    # ---- Known relationships ----
     relationships = []
     if dl.relationships_df is not None:
         rel_rows = dl.relationships_df[dl.relationships_df["account_id"] == account_id]
         for _, r in rel_rows.iterrows():
             relationships.append({
-                "relationship_id":        r.get("relationship_id"),
-                "related_entity_name":    r.get("related_entity_name"),
-                "relationship_type":      r.get("relationship_type"),
-                "related_is_pep":         bool(r.get("related_is_pep")),
-                "related_is_sanctioned":  bool(r.get("related_is_sanctioned")),
-                "sanctioned_entity_id":   r.get("related_sanctioned_entity_id") if r.get("related_is_sanctioned") else None,
-                "source":                 r.get("source"),
+                "relationship_id":       r.get("relationship_id"),
+                "related_entity_name":   r.get("related_entity_name"),
+                "relationship_type":     r.get("relationship_type"),
+                "related_is_pep":        bool(r.get("related_is_pep")),
+                "related_is_sanctioned": bool(r.get("related_is_sanctioned")),
+                "sanctioned_entity_id":  r.get("related_sanctioned_entity_id") if r.get("related_is_sanctioned") else None,
+                "source":                r.get("source"),
             })
 
-    # ---- Paginated transactions with per-tx screening ----
+    # ---- Paginated transactions ----
     page_tx = all_tx.iloc[(page - 1) * limit : page * limit]
     transactions = []
     for _, tx in page_tx.iterrows():
-        tid = tx.get("transaction_id")
-        scr = dl.screening_by_tx.get(tid) if dl.screening_by_tx else None
+        tid  = tx.get("transaction_id")
+        scr  = dl.screening_by_tx.get(tid) if dl.screening_by_tx else None
+        rname = tx.get("recipient_name")
 
-        # Resolve recipient identity for this specific transaction
         rtype = tx.get("recipient_type")
-        recipient_risk_score = None
-        recipient_risk_band  = None
-        recipient_full_name  = None
+        recipient_risk_score    = None
+        recipient_risk_band     = None
+        recipient_full_name     = None
         recipient_is_sanctioned = None
 
         if rtype == "account" and not _is_nan(tx.get("recipient_account_id")):
@@ -534,12 +518,11 @@ def get_transactions(
             recipient_risk_score = rinfo.get("overall_risk_score")
             recipient_risk_band  = rinfo.get("risk_band")
             recipient_full_name  = rinfo.get("full_name")
-
         elif rtype == "crypto_wallet" and not _is_nan(tx.get("recipient_wallet_id")):
             winfo = wallet_lookup.get(tx["recipient_wallet_id"], {})
             recipient_is_sanctioned = bool(winfo.get("is_sanctioned"))
 
-        tx_dict = {
+        transactions.append({
             "transaction_id":          tid,
             "amount":                  tx.get("amount"),
             "currency":                tx.get("currency"),
@@ -547,7 +530,7 @@ def get_transactions(
             "recipient_type":          rtype,
             "recipient_account_id":    tx.get("recipient_account_id") if not _is_nan(tx.get("recipient_account_id")) else None,
             "recipient_wallet_id":     tx.get("recipient_wallet_id") if not _is_nan(tx.get("recipient_wallet_id")) else None,
-            "recipient_name":          tx.get("recipient_name") if tx.get("recipient_name") else None,
+            "recipient_name":          None if (rname is None or _is_nan(rname)) else str(rname),
             "recipient_country":       tx.get("recipient_country"),
             "recipient_full_name":     recipient_full_name,
             "recipient_risk_score":    recipient_risk_score,
@@ -560,17 +543,16 @@ def get_transactions(
             "hour_of_day":             tx.get("hour_of_day"),
             "day_of_week":             tx.get("day_of_week"),
             "screening": {
-                "screening_id":    scr.get("screening_id") if scr else None,
-                "match_score":     scr.get("match_score") if scr else None,
-                "dynamic_verdict": scr.get("dynamic_verdict") if scr else None,
-                "dynamic_t_block": scr.get("dynamic_t_block") if scr else None,
+                "screening_id":     scr.get("screening_id") if scr else None,
+                "match_score":      scr.get("match_score") if scr else None,
+                "dynamic_verdict":  scr.get("dynamic_verdict") if scr else None,
+                "dynamic_t_block":  scr.get("dynamic_t_block") if scr else None,
                 "dynamic_t_review": scr.get("dynamic_t_review") if scr else None,
-                "static_verdict":  scr.get("static_verdict") if scr else None,
+                "static_verdict":   scr.get("static_verdict") if scr else None,
                 "static_threshold": scr.get("static_threshold") if scr else None,
-                "verdicts_differ": bool(scr.get("verdicts_differ")) if scr else None,
+                "verdicts_differ":  bool(scr.get("verdicts_differ")) if scr else None,
             } if scr else None,
-        }
-        transactions.append(tx_dict)
+        })
 
     return clean({
         "account_id": account_id,
@@ -614,15 +596,15 @@ def get_transactions(
 
         "threshold_explanation": threshold_fm,
 
-        "relationships": relationships,
-        "relationship_count": len(relationships),
+        "relationships":       relationships,
+        "relationship_count":  len(relationships),
 
         "summary": summary,
 
         "transaction_graph": transaction_graph,
 
         "transactions": transactions,
-        "total": total,
-        "page": page,
-        "limit": limit,
+        "total":  total,
+        "page":   page,
+        "limit":  limit,
     })

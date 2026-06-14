@@ -301,7 +301,7 @@ overall = 0.25×geographic + 0.15×identity_kyc + 0.30×pep_sanctions + 0.20×be
 
 ### `GET /accounts/{account_id}/transactions`
 
-Transactions sent by this account, sorted newest-first.
+Full transaction intelligence for an account. Returns the account's complete transaction history together with: the full account and risk profile, live AI model output with threshold explanation, a connection graph of every entity the account has transacted with, and per-transaction screening results (both dynamic and static threshold verdicts).
 
 **Path parameter:** `account_id`
 
@@ -309,61 +309,392 @@ Transactions sent by this account, sorted newest-first.
 
 | Parameter | Type    | Default | Description |
 |-----------|---------|---------|-------------|
-| `page`    | integer | `1`     | |
-| `limit`   | integer | `50`    | Max `200` |
+| `page`    | integer | `1`     | Page number for the `transactions` list |
+| `limit`   | integer | `50`    | Results per page, max `200` |
 | `from`    | string  | —       | ISO datetime filter start (e.g. `2025-01-01T00:00:00`) |
 | `to`      | string  | —       | ISO datetime filter end |
 
-**Response `200 OK`:**
+The `transaction_graph`, `summary`, `relationships`, `model_output`, and `threshold_explanation` sections always cover **all** transactions for the account (not just the current page). Only the `transactions` array is paginated.
 
-```json
+---
+
+**Top-level response structure:**
+
+```
 {
-  "account_id": "ACC-011291",
-  "total": 122,
-  "page": 1,
-  "limit": 2,
-  "transactions": [
-    {
-      "transaction_id": "TXN-00161244",
-      "amount": 160.96,
-      "currency": "GBP",
-      "payment_rail": "crypto",
-      "recipient_type": "crypto_wallet",
-      "recipient_name": null,
-      "recipient_country": "HR",
-      "timestamp": "2026-05-22T00:18:34",
-      "velocity_30d_count": 2,
-      "velocity_30d_amount": 712559.76,
-      "is_first_time_recipient": 1
-    },
-    {
-      "transaction_id": "TXN-00143414",
-      "amount": 712533.96,
-      "currency": "GBP",
-      "payment_rail": "wire",
-      "recipient_type": "account",
-      "recipient_name": "حسين هوشیار",
-      "recipient_country": "XX",
-      "timestamp": "2026-05-14T02:28:00",
-      "velocity_30d_count": 1,
-      "velocity_30d_amount": 25.8,
-      "is_first_time_recipient": 1
-    }
-  ]
+  account_id
+  account             — full account record
+  risk_score          — five-component risk breakdown + formula
+  model_output        — live AI screening verdict + audit + probabilities
+  threshold_explanation — step-by-step threshold formula with static vs dynamic comparison
+  relationships       — known formal relationships (family / ownership / associate / directorship)
+  relationship_count
+  summary             — aggregate transaction statistics
+  transaction_graph   — network graph of all recipients (nodes + edges)
+  transactions        — paginated list, each with per-transaction screening result
+  total, page, limit
 }
 ```
 
-**Field notes:**
-- `payment_rail`: `"wire"` | `"ach"` | `"crypto"` | `"card"` | `"internal"`
-- `recipient_type`: `"account"` | `"crypto_wallet"` | `"external"`
-- `recipient_name`: can be `null` for crypto wallet recipients
-- `recipient_country`: ISO 3166-1 alpha-2 country code. `"XX"` = unknown/offshore.
-- `velocity_30d_count` / `velocity_30d_amount`: rolling 30-day transaction count and total amount for this sender at the time of each transaction.
-- `is_first_time_recipient`: `0` or `1` — whether this sender has ever sent to this recipient before.
-- Some accounts have zero transactions — `total` will be `0` and `transactions` will be `[]`. This is normal for accounts that only had onboarding screenings.
+---
+
+**`account`** — Full account record.
+
+```json
+"account": {
+  "account_id": "ACC-011291",
+  "full_name": "Илья Иосифович Клебанов",
+  "account_type": "individual",
+  "kyc_completeness": 0.3905,
+  "kyc_status": "pending",
+  "is_pep": 0,
+  "has_complex_ownership": 0,
+  "shell_company_flag": 0,
+  "activity_tier": "high",
+  "account_status": "active",
+  "country_residence": "XX",
+  "created_at": "2020-04-19 02:59:55"
+}
+```
+
+---
+
+**`risk_score`** — Five-component breakdown with the weighting formula.
+
+```json
+"risk_score": {
+  "overall_risk_score": 61.29,
+  "risk_band": "HIGH",
+  "geographic_risk": 20.0,
+  "identity_kyc_risk": 80.95,
+  "pep_sanctions_risk": 98.77,
+  "behavioural_risk": 70.65,
+  "relationship_network_risk": 3.88,
+  "scored_at": "2026-06-13T23:31:07",
+  "risk_formula": "overall = 0.25×geographic + 0.15×identity_kyc + 0.30×pep_sanctions + 0.20×behavioural + 0.10×relationship_network"
+}
+```
+
+Component weights: geographic 25%, identity/KYC 15%, PEP/sanctions 30%, behavioural 20%, relationship network 10%.
+
+---
+
+**`model_output`** — Live inference result from the AI model (called on every request).
+
+```json
+"model_output": {
+  "verdict": "BLOCK",
+  "block_probability": 0.9999,
+  "class_probabilities": {
+    "BLOCK": 0.9981,
+    "CLEAR": 0.0007,
+    "REVIEW": 0.0012
+  },
+  "audit_narrative": "Verdict: BLOCK. The account's overall risk score of 61.3/100 lowered the block threshold from the static baseline of 75.0 to 69.4 and the review threshold to 44.4, reflecting a high-risk profile. The screening system produced a match score of 87.6/100. match score 87.6 ≥ block threshold 69.4 → automatic block.",
+  "audit_factors": [
+    "pep sanctions risk = 98.8 (importance 0.838, contribution 82.8%)",
+    "match score = 87.6 (importance 0.123, contribution 10.8%)",
+    "overall risk score = 61.3 (importance 0.025, contribution 1.5%)"
+  ],
+  "feature_contributions": [
+    { "feature": "pep_sanctions_risk", "importance": 0.838, "value": 98.77, "contribution_pct": 82.8 },
+    { "feature": "match_score",        "importance": 0.123, "value": 87.6,  "contribution_pct": 10.8 },
+    { "feature": "overall_risk_score", "importance": 0.025, "value": 61.29, "contribution_pct": 1.53 }
+  ],
+  "risk_components": {
+    "geographic_risk": 20.0,
+    "identity_kyc_risk": 80.95,
+    "pep_sanctions_risk": 98.77,
+    "behavioural_risk": 70.65,
+    "relationship_network_risk": 3.88
+  }
+}
+```
+
+- `block_probability` — from the binary XGBoost model (BLOCK vs not-BLOCK).
+- `class_probabilities` — from the multiclass model. Sum ≈ 1.0. BLOCK + REVIEW + CLEAR.
+- `audit_narrative` — plain-English paragraph. Display as body text.
+- `audit_factors` — bullet list. Each item names a feature and its contribution.
+- `feature_contributions` — sorted by `contribution_pct` descending. `importance` is the XGBoost feature importance weight; `contribution_pct` is `importance × normalised_value × 100`.
+
+---
+
+**`threshold_explanation`** — Full step-by-step formula showing why this account's thresholds are what they are, plus a direct comparison to the static threshold.
+
+```json
+"threshold_explanation": {
+  "dynamic_t_block": 69.3534,
+  "dynamic_t_review": 44.3534,
+  "static_threshold": 65.0,
+  "baseline_t_block": 75.0,
+  "baseline_t_review": 50.0,
+  "adjustment_factor": 0.5,
+  "risk_deviation": "61.2931 - 50.0 = 11.2931",
+  "adjustment": "11.2931 × 0.5 = 5.6466",
+  "t_block_unclamped": "75.0 - (5.6466) = 69.3534",
+  "t_block_clamp_range": "[40.0, 95.0]",
+  "t_block_final": 69.3534,
+  "t_review_unclamped": "50.0 - (5.6466) = 44.3534",
+  "t_review_clamp_range": "[20.0, 70.0]",
+  "t_review_final": 44.3534,
+  "static_vs_dynamic": "Static threshold is fixed at 65.0 for all accounts. Dynamic threshold for this account: t_block=69.35, t_review=44.35. Dynamic is more lenient (higher t_block) than static, reducing false positives for this low-risk account.",
+  "interpretation": "This account has above-average risk (61.29 > 50). Dynamic thresholds are lowered, making it easier to trigger BLOCK or REVIEW. A lower-risk account with score 20 would have t_block=87.5 and t_review=62.5.",
+  "decision_zones": {
+    "BLOCK":  "match_score ≥ 69.3534",
+    "REVIEW": "44.3534 ≤ match_score < 69.3534",
+    "CLEAR":  "match_score < 44.3534"
+  }
+}
+```
+
+- `static_threshold` is always `65.0`. This is the fixed baseline used for comparison — the system uses `dynamic_t_block` for actual decisions.
+- `static_vs_dynamic` is a ready-to-display sentence explaining whether the dynamic threshold is stricter or more lenient than the static one for this account.
+- The `risk_deviation`, `adjustment`, `t_block_unclamped`, and `t_review_unclamped` fields are display strings (not numbers) — show them verbatim in a formula breakdown tooltip.
+
+---
+
+**`relationships`** — Formal relationships recorded for this account (ownership structures, family ties, business associates, directorships). These come from the FollowTheMoney graph data, not from transaction history.
+
+```json
+"relationships": [
+  {
+    "relationship_id": "REL-0012844",
+    "related_entity_name": "Crystal Williams",
+    "relationship_type": "family",
+    "related_is_pep": false,
+    "related_is_sanctioned": false,
+    "sanctioned_entity_id": null,
+    "source": "synthetic"
+  }
+],
+"relationship_count": 3
+```
+
+- `relationship_type`: `"family"` | `"associate"` | `"ownership"` | `"directorship"`
+- `related_is_sanctioned`: if `true`, `sanctioned_entity_id` will contain the sanctions list reference.
+- `source`: `"real_ftm"` (from FollowTheMoney real data) or `"synthetic"` (generated).
+
+---
+
+**`summary`** — Aggregate statistics across all transactions (respects `from`/`to` date filters).
+
+```json
+"summary": {
+  "total_transactions": 122,
+  "total_sent_amount": 63355356.86,
+  "avg_transaction_amount": 519306.2,
+  "max_transaction_amount": 10000000.0,
+  "unique_recipients": 122,
+  "date_range": {
+    "first": "2023-02-02T00:11:05",
+    "last":  "2026-05-22T00:18:34"
+  },
+  "payment_rails": {
+    "ach": 54, "wire": 36, "crypto": 13, "card": 9, "check": 8, "internal": 2
+  },
+  "currencies": {
+    "USD": 80, "EUR": 22, "CAD": 8, "GBP": 4, "CNY": 4
+  },
+  "screening_verdicts": {
+    "BLOCK": 122, "REVIEW": 0, "CLEAR": 0, "unscreened": 0
+  }
+}
+```
+
+- `unique_recipients` counts distinct accounts + distinct wallet addresses + distinct external individual names.
+- `screening_verdicts` counts transaction-level screenings by dynamic verdict. `unscreened` counts transactions that had no screening event recorded (possible for older transactions).
+
+---
+
+**`transaction_graph`** — Network graph of every entity this account has transacted with. Designed for use with a graph visualisation library (e.g. Cytoscape.js, react-force-graph, vis-network).
+
+**Structure:**
+
+```json
+"transaction_graph": {
+  "node_count": 123,
+  "edge_count": 122,
+  "nodes": [ ... ],
+  "edges": [ ... ]
+}
+```
+
+**Source node** (always `nodes[0]`, `type = "source"`):
+
+```json
+{
+  "id": "ACC-011291",
+  "type": "source",
+  "label": "Илья Иосифович Клебанов",
+  "account_type": "individual",
+  "overall_risk_score": 61.29,
+  "risk_band": "HIGH",
+  "latest_verdict": "BLOCK",
+  "kyc_status": "pending",
+  "is_pep": 0,
+  "country_residence": "XX"
+}
+```
+
+**Account recipient node** (`type = "account"`):
+
+```json
+{
+  "id": "ACC-006854",
+  "type": "account",
+  "label": "Beatriz Santos",
+  "overall_risk_score": 20.3,
+  "risk_band": "LOW",
+  "latest_verdict": "CLEAR",
+  "transaction_count": 3,
+  "total_amount": 50430.12,
+  "avg_amount": 16810.04,
+  "currencies": { "GBP": 2, "USD": 1 },
+  "payment_rails": { "wire": 2, "ach": 1 },
+  "first_transaction": "2024-03-10T08:22:00",
+  "last_transaction": "2025-11-14T17:05:44"
+}
+```
+
+- `overall_risk_score`, `risk_band`, `latest_verdict` — from the recipient's own risk profile. Use these to colour-code nodes (e.g. red for BLOCK, amber for REVIEW, gradient by risk score).
+
+**Crypto wallet node** (`type = "wallet"`):
+
+```json
+{
+  "id": "WLT-0002239",
+  "type": "wallet",
+  "label": "0x4cc6c0d86f15667b59e74e776df6f5ae22ea14cf",
+  "chain": "Ethereum",
+  "is_sanctioned": false,
+  "sanctioned_entity_id": null,
+  "owner_account_id": "ACC-000006",
+  "transaction_count": 1,
+  "total_amount": 160.96,
+  "avg_amount": 160.96,
+  "currencies": { "GBP": 1 },
+  "payment_rails": { "crypto": 1 },
+  "first_transaction": "2026-05-22T00:18:34",
+  "last_transaction": "2026-05-22T00:18:34"
+}
+```
+
+- `is_sanctioned: true` means the wallet address appears on a real sanctions list.
+- `owner_account_id` — if the wallet belongs to a known account in the dataset, this links to it. Can be `null` for external wallets.
+
+**External individual node** (`type = "external"`):
+
+```json
+{
+  "id": "ext:حسين هوشیار",
+  "type": "external",
+  "label": "حسين هوشیار",
+  "country": "XX",
+  "transaction_count": 2,
+  "total_amount": 712694.72,
+  "avg_amount": 356347.36,
+  "currencies": { "GBP": 2 },
+  "payment_rails": { "wire": 2 },
+  "first_transaction": "2025-09-01T12:00:00",
+  "last_transaction": "2026-05-14T02:28:00"
+}
+```
+
+- `id` has the prefix `ext:` to namespace external individuals separately from account IDs.
+
+**Edges** — one per unique recipient, sorted by `transaction_count` descending:
+
+```json
+{
+  "from": "ACC-011291",
+  "to": "ACC-006854",
+  "recipient_type": "account",
+  "transaction_count": 3,
+  "total_amount": 50430.12,
+  "avg_amount": 16810.04,
+  "currencies": { "GBP": 2, "USD": 1 },
+  "payment_rails": { "wire": 2, "ach": 1 },
+  "first_transaction": "2024-03-10T08:22:00",
+  "last_transaction": "2025-11-14T17:05:44"
+}
+```
+
+- `to` matches the node's `id` field exactly (including the `ext:` prefix for external individuals).
+
+---
+
+**`transactions`** — Paginated list sorted newest-first. Each transaction includes a `screening` block with both dynamic and static threshold verdicts.
+
+```json
+{
+  "transaction_id": "TXN-00161244",
+  "amount": 160.96,
+  "currency": "GBP",
+  "payment_rail": "crypto",
+  "recipient_type": "crypto_wallet",
+  "recipient_account_id": null,
+  "recipient_wallet_id": "WLT-0002239",
+  "recipient_name": null,
+  "recipient_country": "HR",
+  "recipient_full_name": null,
+  "recipient_risk_score": null,
+  "recipient_risk_band": null,
+  "recipient_is_sanctioned": false,
+  "timestamp": "2026-05-22T00:18:34",
+  "velocity_30d_count": 2,
+  "velocity_30d_amount": 712559.76,
+  "is_first_time_recipient": 1,
+  "hour_of_day": 0,
+  "day_of_week": 4,
+  "screening": {
+    "screening_id": "SCR-00028095",
+    "match_score": 92.38,
+    "dynamic_verdict": "BLOCK",
+    "dynamic_t_block": 69.3534,
+    "dynamic_t_review": 44.3534,
+    "static_verdict": "BLOCK",
+    "static_threshold": 65.0,
+    "verdicts_differ": false
+  }
+}
+```
+
+**Transaction field notes:**
+
+| Field | Notes |
+|-------|-------|
+| `recipient_type` | `"account"` \| `"crypto_wallet"` \| `"external_individual"` |
+| `recipient_account_id` | Set for `account` type; `null` otherwise |
+| `recipient_wallet_id` | Set for `crypto_wallet` type; can be a `WLT-` ID or a raw wallet address |
+| `recipient_name` | Set for `external_individual`; `null` for crypto wallets |
+| `recipient_full_name` | The recipient account's registered name if `recipient_type = "account"` and they are in the dataset |
+| `recipient_risk_score` | Recipient's `overall_risk_score` if they are a known account; `null` otherwise |
+| `recipient_risk_band` | Recipient's `risk_band` if known; `null` otherwise |
+| `recipient_is_sanctioned` | `true`/`false` for crypto wallet recipients; `null` for accounts and externals |
+| `recipient_country` | ISO 3166-1 alpha-2. `"XX"` = unknown/offshore |
+| `velocity_30d_count` | Number of transactions sent by this account in the 30 days before this one |
+| `velocity_30d_amount` | Total amount sent by this account in the 30 days before this one |
+| `is_first_time_recipient` | `1` if this account has never sent to this recipient before |
+| `hour_of_day` | 0–23, UTC |
+| `day_of_week` | 0 = Monday … 6 = Sunday |
+
+**`screening` block inside each transaction:**
+
+| Field | Notes |
+|-------|-------|
+| `screening_id` | Links to `GET /screening/{id}` for full audit detail |
+| `match_score` | Name match score (0–100) that triggered the screening |
+| `dynamic_verdict` | Verdict from the dynamic threshold rule: `BLOCK`, `REVIEW`, or `CLEAR` |
+| `dynamic_t_block` | The block threshold that applied at the time of this screening |
+| `dynamic_t_review` | The review threshold that applied at the time of this screening |
+| `static_verdict` | What the verdict would have been with a fixed threshold of 65.0 |
+| `static_threshold` | Always `65.0` |
+| `verdicts_differ` | `true` when `dynamic_verdict ≠ static_verdict` — this is a divergence case |
+
+`screening` is `null` for transactions that were not screened (rare; only possible for very old transactions generated before screening was configured).
 
 **Errors:**
-- `404` is not thrown for unknown account IDs; you'll get `total: 0` instead.
+- `404` — account not found
 
 ---
 

@@ -17,23 +17,29 @@ risk_scores_df: pd.DataFrame | None = None
 screening_df: pd.DataFrame | None = None
 threshold_df: pd.DataFrame | None = None
 transactions_df: pd.DataFrame | None = None
+relationships_df: pd.DataFrame | None = None
+wallets_df: pd.DataFrame | None = None
 logs_df: pd.DataFrame | None = None
 
 # Precomputed views
 accounts_enriched: pd.DataFrame | None = None   # accounts + risk_scores + latest account-level verdict
 screening_merged: pd.DataFrame | None = None    # screening_results + threshold_decisions
+screening_by_tx: dict = {}                      # transaction_id -> screening_merged row dict
 
 
 def load_all() -> None:
     global accounts_df, risk_scores_df, screening_df, threshold_df
-    global transactions_df, logs_df, accounts_enriched, screening_merged
+    global transactions_df, relationships_df, wallets_df, logs_df
+    global accounts_enriched, screening_merged, screening_by_tx
 
-    accounts_df     = pd.read_parquet(EXPORTS_DIR / "accounts.parquet")
-    risk_scores_df  = pd.read_parquet(EXPORTS_DIR / "risk_scores.parquet")
-    screening_df    = pd.read_parquet(EXPORTS_DIR / "screening_results.parquet")
-    threshold_df    = pd.read_parquet(EXPORTS_DIR / "threshold_decisions.parquet")
-    transactions_df = pd.read_parquet(EXPORTS_DIR / "transactions.parquet")
-    logs_df         = pd.read_parquet(EXPORTS_DIR / "explanatory_logs.parquet")
+    accounts_df       = pd.read_parquet(EXPORTS_DIR / "accounts.parquet")
+    risk_scores_df    = pd.read_parquet(EXPORTS_DIR / "risk_scores.parquet")
+    screening_df      = pd.read_parquet(EXPORTS_DIR / "screening_results.parquet")
+    threshold_df      = pd.read_parquet(EXPORTS_DIR / "threshold_decisions.parquet")
+    transactions_df   = pd.read_parquet(EXPORTS_DIR / "transactions.parquet")
+    relationships_df  = pd.read_parquet(EXPORTS_DIR / "account_relationships.parquet")
+    wallets_df        = pd.read_parquet(EXPORTS_DIR / "wallets.parquet")
+    logs_df           = pd.read_parquet(EXPORTS_DIR / "explanatory_logs.parquet")
 
     # --- screening_merged: join screening_results + threshold_decisions ---
     screening_merged = pd.merge(
@@ -46,13 +52,23 @@ def load_all() -> None:
         how="left",
     )
 
+    # --- screening_by_tx: fast lookup of transaction-level screenings by transaction_id ---
+    tx_screenings = screening_merged[
+        screening_merged["screening_context"] == "transaction"
+    ].copy()
+    tx_screenings = tx_screenings[tx_screenings["transaction_id"].notna()]
+    screening_by_tx = {
+        row["transaction_id"]: row.to_dict()
+        for _, row in tx_screenings.iterrows()
+    }
+
     # --- accounts_enriched: accounts + risk_scores + account-level verdict ---
     acct_screenings = (
         screening_merged[screening_merged["screening_context"] == "account"]
         [["account_id", "screening_id", "match_score", "dynamic_verdict", "dynamic_t_block", "dynamic_t_review"]]
         .rename(columns={
-            "screening_id":   "latest_screening_id",
-            "match_score":    "latest_match_score",
+            "screening_id":    "latest_screening_id",
+            "match_score":     "latest_match_score",
             "dynamic_verdict": "latest_verdict",
             "dynamic_t_block": "latest_t_block",
             "dynamic_t_review": "latest_t_review",

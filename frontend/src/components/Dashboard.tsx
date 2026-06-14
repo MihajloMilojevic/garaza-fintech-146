@@ -737,7 +737,12 @@ function TransactionDetails({ tx, sender }: { tx: ScreeningTransaction; sender: 
 
         {/* Arrow + Amount */}
         <div className="flex shrink-0 flex-col items-center gap-1 px-2 md:px-4">
-          <span className="text-xl font-bold text-slate-900">{amountFmt}</span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-bold text-slate-900">{amountFmt}</span>
+            <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-slate-500">
+              {tx.currency}
+            </span>
+          </div>
           <div className="flex items-center gap-2">
             <div className="h-px w-10 bg-slate-300" />
             <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">

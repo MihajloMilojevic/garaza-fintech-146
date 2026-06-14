@@ -195,6 +195,34 @@ export interface ScreeningListResponse {
   results: ScreeningListItem[];
 }
 
+export interface ScreeningTransaction {
+  transaction_id: string;
+  amount: number;
+  currency: string;
+  payment_rail: string;
+  recipient_name: string | null;
+  recipient_type: string;
+  recipient_country: string;
+  recipient_account_id: string | null;
+  recipient_wallet_id: string | null;
+  is_first_time_recipient: number;
+  velocity_30d_count: number;
+  velocity_30d_amount: number;
+  sender_account_age_days: number;
+  timestamp: string;
+}
+
+export interface ScreeningSender {
+  account_id: string;
+  full_name: string | null;
+  country_residence: string | null;
+  account_type: string;
+  kyc_status: string;
+  is_pep: number;
+  risk_band: string;
+  overall_risk_score: number;
+}
+
 export interface ScreeningDetail {
   screening_id: string;
   account_id: string;
@@ -202,6 +230,8 @@ export interface ScreeningDetail {
   match_score: number;
   context: ScreeningContext;
   screened_at: string;
+  transaction: ScreeningTransaction | null;
+  sender: ScreeningSender;
   threshold_decision: {
     t_block: number;
     t_review: number;

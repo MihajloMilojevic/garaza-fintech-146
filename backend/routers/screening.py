@@ -88,12 +88,33 @@ def get_screening(screening_id: str):
         raise HTTPException(404, f"Account {account_id} not found")
     acct = acct_rows.iloc[0]
 
-    # Transaction timestamp
+    # Transaction details
+    transaction_id = scr.get("transaction_id")
+    transaction = None
     screened_at = acct.get("computed_at")
-    if scr.get("transaction_id") and dl.transactions_df is not None:
-        tx_rows = dl.transactions_df[dl.transactions_df["transaction_id"] == scr["transaction_id"]]
-        if not tx_rows.empty:
-            screened_at = tx_rows.iloc[0]["timestamp"]
+    if transaction_id and dl.transactions_df is not None:
+        import math as _math
+        if not (isinstance(transaction_id, float) and _math.isnan(transaction_id)):
+            tx_rows = dl.transactions_df[dl.transactions_df["transaction_id"] == transaction_id]
+            if not tx_rows.empty:
+                tx = tx_rows.iloc[0]
+                screened_at = tx.get("timestamp")
+                transaction = {
+                    "transaction_id":        tx.get("transaction_id"),
+                    "amount":                float(tx.get("amount") or 0),
+                    "currency":              tx.get("currency"),
+                    "payment_rail":          tx.get("payment_rail"),
+                    "recipient_name":        tx.get("recipient_name"),
+                    "recipient_type":        tx.get("recipient_type"),
+                    "recipient_country":     tx.get("recipient_country"),
+                    "recipient_account_id":  tx.get("recipient_account_id"),
+                    "recipient_wallet_id":   tx.get("recipient_wallet_id"),
+                    "is_first_time_recipient": int(tx.get("is_first_time_recipient") or 0),
+                    "velocity_30d_count":    int(tx.get("velocity_30d_count") or 0),
+                    "velocity_30d_amount":   float(tx.get("velocity_30d_amount") or 0),
+                    "sender_account_age_days": int(tx.get("sender_account_age_days") or 0),
+                    "timestamp":             tx.get("timestamp"),
+                }
 
     # Build feature dict and call screen()
     features = {
@@ -126,13 +147,26 @@ def get_screening(screening_id: str):
     t_block_raw  = 75.0 - adj
     t_review_raw = 50.0 - adj
 
+    sender = {
+        "account_id":        account_id,
+        "full_name":         acct.get("full_name"),
+        "country_residence": acct.get("country_residence"),
+        "account_type":      acct.get("account_type"),
+        "kyc_status":        acct.get("kyc_status"),
+        "is_pep":            int(acct.get("is_pep") or 0),
+        "risk_band":         acct.get("risk_band"),
+        "overall_risk_score": float(acct.get("overall_risk_score") or 0),
+    }
+
     return clean({
-        "screening_id": screening_id,
-        "account_id":   account_id,
-        "verdict":      model_result["verdict"],
-        "match_score":  model_result["match_score"],
-        "context":      scr.get("screening_context"),
-        "screened_at":  screened_at,
+        "screening_id":  screening_id,
+        "account_id":    account_id,
+        "verdict":       model_result["verdict"],
+        "match_score":   model_result["match_score"],
+        "context":       scr.get("screening_context"),
+        "screened_at":   screened_at,
+        "transaction":   transaction,
+        "sender":        sender,
         "threshold_decision": {
             "t_block":   t_block,
             "t_review":  t_review,
@@ -140,15 +174,15 @@ def get_screening(screening_id: str):
             "verdict":   model_result["verdict"],
             "formula": {
                 "overall_risk_score": risk,
-                "adjustment":        f"({risk} - 50.0) × 0.5 = {adj:.2f}",
-                "t_block_raw":       f"75.0 - {adj:.2f} = {t_block_raw:.4f} → clamped to {t_block}",
-                "t_review_raw":      f"50.0 - {adj:.2f} = {t_review_raw:.4f} → clamped to {t_review}",
+                "adjustment":        f"({risk} - 50.0) * 0.5 = {adj:.2f}",
+                "t_block_raw":       f"75.0 - {adj:.2f} = {t_block_raw:.4f} -> clamped to {t_block}",
+                "t_review_raw":      f"50.0 - {adj:.2f} = {t_review_raw:.4f} -> clamped to {t_review}",
             },
         },
-        "audit_narrative":     model_result["audit_narrative"],
-        "audit_factors":       model_result["audit_factors"],
-        "risk_components":     model_result["risk_components"],
-        "class_probabilities": model_result["class_probabilities"],
-        "block_probability":   model_result["block_probability"],
+        "audit_narrative":       model_result["audit_narrative"],
+        "audit_factors":         model_result["audit_factors"],
+        "risk_components":       model_result["risk_components"],
+        "class_probabilities":   model_result["class_probabilities"],
+        "block_probability":     model_result["block_probability"],
         "feature_contributions": model_result["feature_contributions"],
     })

@@ -6,7 +6,7 @@ import { useSuspenseQuery, useQuery, useMutation } from "@tanstack/react-query";
 import { GraphPanel, RISK_COLORS, type GraphNode, type Edge } from "./GraphPanel";
 import { TopNav } from "./TopNav";
 import { qk } from "@/lib/api/queries";
-import { verdictToRisk, type TransactionGraphNode, type LlmReview, type Verdict, apiClient } from "@/lib/api/client";
+import { verdictToRisk, type TransactionGraphNode, type LlmReview, type Verdict, type ScreeningTransaction, type ScreeningSender, apiClient } from "@/lib/api/client";
 
 // ─── Risk helpers ────────────────────────────────────────────────────────────
 
@@ -278,6 +278,13 @@ export function Dashboard({ screeningId }: { screeningId: string }) {
             ) : null}
           </div>
         </header>
+
+        {/* Transaction Details strip */}
+        {screening.transaction ? (
+          <TransactionDetails tx={screening.transaction} sender={screening.sender} />
+        ) : screening.sender && (
+          <SenderDetails sender={screening.sender} />
+        )}
 
         <div className="grid grid-cols-12 gap-6 flex-1 min-h-0">
           <aside className="col-span-12 lg:col-span-3">
@@ -659,6 +666,148 @@ function AiSummaryPanel({
           >
             Block
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Transaction / Sender detail strips ──────────────────────────────────────
+
+const RAIL_LABELS: Record<string, string> = {
+  wire: "Wire Transfer",
+  ach: "ACH",
+  card: "Card",
+  crypto: "Crypto",
+  check: "Check",
+  internal: "Internal",
+};
+
+function TxField({ label, value, mono = false, highlight = false }: {
+  label: string;
+  value: string | number | null | undefined;
+  mono?: boolean;
+  highlight?: boolean;
+}) {
+  if (value === null || value === undefined || value === "" || value === "nan") return null;
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</span>
+      <span
+        className={`text-sm font-semibold truncate ${mono ? "font-mono" : ""} ${highlight ? "text-amber-600" : "text-slate-800"}`}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function TransactionDetails({ tx, sender }: { tx: ScreeningTransaction; sender: ScreeningSender }) {
+  const amountFmt = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: tx.currency || "USD",
+    maximumFractionDigits: 2,
+  }).format(tx.amount);
+
+  const vel30Fmt = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: tx.currency || "USD",
+    maximumFractionDigits: 0,
+    notation: "compact",
+  }).format(tx.velocity_30d_amount);
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white px-6 py-4" style={{ boxShadow: "inset 0 2px 12px 0 rgba(0,68,254,0.06)" }}>
+      {/* Flow: Sender -> Amount -> Recipient */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:gap-6">
+        {/* Sender */}
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Sender</span>
+          <span className="text-base font-bold text-slate-900 truncate">{sender.full_name ?? sender.account_id}</span>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-xs text-slate-500">{sender.account_id}</span>
+            {sender.is_pep === 1 && (
+              <span className="rounded bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-rose-700">PEP</span>
+            )}
+            {sender.country_residence && (
+              <span className="text-xs text-slate-500">{sender.country_residence}</span>
+            )}
+          </div>
+        </div>
+
+        {/* Arrow + Amount */}
+        <div className="flex shrink-0 flex-col items-center gap-1 px-2 md:px-4">
+          <span className="text-xl font-bold text-slate-900">{amountFmt}</span>
+          <div className="flex items-center gap-2">
+            <div className="h-px w-10 bg-slate-300" />
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+              {RAIL_LABELS[tx.payment_rail] ?? tx.payment_rail}
+            </span>
+            <div className="h-px w-10 bg-slate-300" />
+          </div>
+        </div>
+
+        {/* Recipient */}
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Recipient</span>
+          <span className="text-base font-bold text-slate-900 truncate">
+            {tx.recipient_name ?? tx.recipient_account_id ?? "Unknown"}
+          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs capitalize text-slate-500">{tx.recipient_type?.replace(/_/g, " ")}</span>
+            {tx.recipient_country && tx.recipient_country !== "XX" && (
+              <span className="text-xs font-semibold text-slate-600">{tx.recipient_country}</span>
+            )}
+            {tx.recipient_account_id && (
+              <span className="font-mono text-xs text-slate-400">{tx.recipient_account_id}</span>
+            )}
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="hidden md:block h-12 w-px bg-slate-200 mx-2" />
+
+        {/* Stats grid */}
+        <div className="grid grid-cols-2 gap-x-8 gap-y-2 sm:grid-cols-4">
+          <TxField label="Timestamp" value={new Date(tx.timestamp).toLocaleString()} />
+          <TxField label="30d Txns" value={tx.velocity_30d_count} />
+          <TxField label="30d Volume" value={vel30Fmt} />
+          <TxField
+            label="First-time Recipient"
+            value={tx.is_first_time_recipient ? "Yes" : "No"}
+            highlight={tx.is_first_time_recipient === 1}
+          />
+          <TxField label="Acct Age (days)" value={tx.sender_account_age_days} />
+          <TxField label="Transaction ID" value={tx.transaction_id} mono />
+          {tx.recipient_wallet_id && (
+            <TxField label="Wallet ID" value={tx.recipient_wallet_id} mono />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SenderDetails({ sender }: { sender: ScreeningSender }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white px-6 py-4" style={{ boxShadow: "inset 0 2px 12px 0 rgba(0,68,254,0.06)" }}>
+      <div className="flex flex-wrap items-center gap-6">
+        <div className="flex flex-col gap-0.5">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Account Holder</span>
+          <span className="text-base font-bold text-slate-900">{sender.full_name ?? sender.account_id}</span>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-xs text-slate-500">{sender.account_id}</span>
+            {sender.is_pep === 1 && (
+              <span className="rounded bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-rose-700">PEP</span>
+            )}
+          </div>
+        </div>
+        <div className="hidden md:block h-10 w-px bg-slate-200" />
+        <div className="grid grid-cols-2 gap-x-8 gap-y-2 sm:grid-cols-4">
+          <TxField label="Type" value={sender.account_type} />
+          <TxField label="KYC Status" value={sender.kyc_status} />
+          <TxField label="Country" value={sender.country_residence} />
+          <TxField label="Risk Band" value={sender.risk_band} />
         </div>
       </div>
     </div>

@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
-import { useSuspenseQuery, useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery, useQuery, useMutation } from "@tanstack/react-query";
 import { GraphPanel, RISK_COLORS, type GraphNode, type Edge } from "./GraphPanel";
 import { TopNav } from "./TopNav";
 import { qk } from "@/lib/api/queries";
-import { verdictToRisk, type TransactionGraphNode } from "@/lib/api/client";
+import { verdictToRisk, type TransactionGraphNode, type LlmReview, apiClient } from "@/lib/api/client";
 
 // ─── Risk helpers ────────────────────────────────────────────────────────────
 
@@ -224,6 +224,10 @@ export function Dashboard({ screeningId }: { screeningId: string }) {
     }
   };
 
+  const llmMutation = useMutation({
+    mutationFn: () => apiClient.llmReview(screeningId),
+  });
+
   const blockPct = Math.round((screening.block_probability ?? 0) * 100);
   const isReview = screening.verdict === "REVIEW";
 
@@ -409,6 +413,9 @@ export function Dashboard({ screeningId }: { screeningId: string }) {
                       factors={screening.audit_factors}
                       blockProbability={screening.block_probability}
                       matchScore={screening.match_score}
+                      llmReview={llmMutation.data ?? null}
+                      llmLoading={llmMutation.isPending}
+                      onLlmReview={() => llmMutation.mutate()}
                       onApprove={() => handleDecision("approve")}
                       onBlock={() => handleDecision("block")}
                     />
@@ -457,11 +464,20 @@ function RiskBadge({
   );
 }
 
+const REC_COLORS = {
+  APPROVE: { bg: "#10b981", text: "#065f46", pill: "#d1fae5" },
+  ESCALATE: { bg: "#f59e0b", text: "#92400e", pill: "#fef3c7" },
+  BLOCK:    { bg: "#ef4444", text: "#991b1b", pill: "#fee2e2" },
+} as const;
+
 function AiSummaryPanel({
   narrative,
   factors,
   blockProbability,
   matchScore,
+  llmReview,
+  llmLoading,
+  onLlmReview,
   onApprove,
   onBlock,
 }: {
@@ -469,25 +485,127 @@ function AiSummaryPanel({
   factors: string[];
   blockProbability: number;
   matchScore: number;
+  llmReview: LlmReview | null;
+  llmLoading: boolean;
+  onLlmReview: () => void;
   onApprove: () => void;
   onBlock: () => void;
 }) {
   const blockPct = Math.round(blockProbability * 100);
+  const recColor = llmReview ? REC_COLORS[llmReview.recommendation] : null;
+
   return (
     <div className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-[#c8102e] bg-white">
       <div aria-hidden="true" className="sokin-orb-bottom" />
       <div aria-hidden="true" className="sokin-orb-top" />
       <div aria-hidden="true" className="sokin-orb-left-mid" />
 
-      <div className="relative z-20 p-6 pb-4">
-        <p className="mb-2 text-s font-bold uppercase tracking-[0.18em] text-[#c8102e]">
-          AI Assistant
-        </p>
-        <h2 className="text-xl font-bold text-slate-900">Screening Summary</h2>
+      <div className="relative z-20 p-6 pb-4 flex items-start justify-between gap-3">
+        <div>
+          <p className="mb-2 text-s font-bold uppercase tracking-[0.18em] text-[#c8102e]">
+            AI Assistant
+          </p>
+          <h2 className="text-xl font-bold text-slate-900">Screening Summary</h2>
+        </div>
+        {!llmReview && (
+          <button
+            onClick={onLlmReview}
+            disabled={llmLoading}
+            className="mt-1 shrink-0 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-600 transition-all hover:border-[#c8102e] hover:text-[#c8102e] disabled:opacity-50"
+          >
+            {llmLoading ? (
+              <span className="flex items-center gap-2">
+                <span className="h-3 w-3 rounded-full border-2 border-[#c8102e] border-t-transparent animate-spin" />
+                Thinking…
+              </span>
+            ) : (
+              "LLM Review"
+            )}
+          </button>
+        )}
       </div>
 
       <div className="relative z-20 flex-1 overflow-hidden rounded-b-2xl flex flex-col justify-between">
         <div className="overflow-y-auto p-6 pt-2 space-y-6 mb-36 no-scrollbar">
+
+          {/* LLM Review result */}
+          {llmReview && recColor && (
+            <section className="rounded-xl border p-4 space-y-4" style={{ borderColor: `${recColor.bg}40`, background: `${recColor.bg}08` }}>
+              <div className="flex items-center justify-between">
+                <span
+                  className="rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider"
+                  style={{ background: recColor.pill, color: recColor.text }}
+                >
+                  {llmReview.recommendation}
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    Confidence: {llmReview.confidence}
+                  </span>
+                  {llmReview.llm_powered ? (
+                    <span className="rounded bg-violet-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-violet-700">
+                      LLM
+                    </span>
+                  ) : (
+                    <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-slate-500">
+                      Rule
+                    </span>
+                  )}
+                </div>
+              </div>
+              <p className="text-sm leading-relaxed text-slate-700">{llmReview.summary}</p>
+
+              {llmReview.key_concerns.length > 0 && (
+                <div>
+                  <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-500">Key Concerns</p>
+                  <ul className="space-y-1.5">
+                    {llmReview.key_concerns.map((c, i) => (
+                      <li key={i} className="flex items-start gap-2 text-xs text-slate-600">
+                        <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: recColor.bg }} />
+                        {c}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {llmReview.mitigating_factors.length > 0 && (
+                <div>
+                  <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-500">Mitigating Factors</p>
+                  <ul className="space-y-1.5">
+                    {llmReview.mitigating_factors.map((f, i) => (
+                      <li key={i} className="flex items-start gap-2 text-xs text-slate-600">
+                        <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {llmReview.required_actions.length > 0 && (
+                <div>
+                  <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-500">Required Actions</p>
+                  <ul className="space-y-1.5">
+                    {llmReview.required_actions.map((a, i) => (
+                      <li key={i} className="flex items-start gap-2 text-xs font-semibold text-slate-700">
+                        <span className="mt-0.5 shrink-0 font-mono text-[10px] text-slate-400">{i + 1}.</span>
+                        {a}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {llmReview.compliance_notes && (
+                <p className="rounded-lg bg-slate-50 px-3 py-2 text-[11px] text-slate-500 italic">
+                  {llmReview.compliance_notes}
+                </p>
+              )}
+            </section>
+          )}
+
+          {/* Block probability */}
           <section>
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-sm font-bold text-slate-900">Block Probability</h3>

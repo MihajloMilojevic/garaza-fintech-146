@@ -261,6 +261,18 @@ export interface ThresholdExplain {
   decision_zones: Record<string, string>;
 }
 
+export interface LlmReview {
+  recommendation: "APPROVE" | "ESCALATE" | "BLOCK";
+  confidence: "LOW" | "MEDIUM" | "HIGH";
+  summary: string;
+  key_concerns: string[];
+  mitigating_factors: string[];
+  required_actions: string[];
+  compliance_notes: string;
+  llm_powered: boolean;
+  model?: string;
+}
+
 function qs(params: Record<string, unknown>): string {
   const sp = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) {
@@ -295,6 +307,8 @@ export const apiClient = {
   screen: (body: ScreenRequest) =>
     api<ScreenResponse>("/screen", { method: "POST", body: JSON.stringify(body) }),
   thresholdExplain: (id: string) => api<ThresholdExplain>(`/thresholds/explain/${id}`),
+  llmReview: (id: string) =>
+    api<LlmReview>(`/screening/${id}/llm-review`, { method: "POST" }),
 };
 
 export function verdictToRisk(v: Verdict): "low" | "medium" | "high" {

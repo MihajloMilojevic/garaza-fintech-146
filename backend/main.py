@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from data.loader import load_all
-from routers import screen, accounts, screening, dashboard
+from routers import screen, accounts, screening, dashboard, llm_review
 
 app = FastAPI(
     title="Sanctions Screening API",
@@ -34,6 +34,7 @@ app.include_router(screen.router)
 app.include_router(accounts.router)
 app.include_router(screening.router)
 app.include_router(dashboard.router)
+app.include_router(llm_review.router)
 
 
 @app.get("/")

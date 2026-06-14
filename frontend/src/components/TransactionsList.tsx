@@ -1,10 +1,10 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { RISK_COLORS } from "./GraphPanel";
 import { TopNav } from "./TopNav";
 import { qk } from "@/lib/api/queries";
-import { verdictToRisk } from "@/lib/api/client";
+import { verdictToRisk, type Verdict } from "@/lib/api/client";
 
 const RISK_LABEL = {
   low: "Low Risk",
@@ -12,21 +12,44 @@ const RISK_LABEL = {
   high: "High Risk",
 } as const;
 
-export function TransactionsList() {
-  const { data } = useSuspenseQuery(qk.screeningList({ limit: 50 }));
-  const items = data.results;
+const VERDICT_FILTERS: { label: string; value: Verdict | undefined }[] = [
+  { label: "All", value: undefined },
+  { label: "Block", value: "BLOCK" },
+  { label: "Review", value: "REVIEW" },
+  { label: "Clear", value: "CLEAR" },
+];
 
+const PAGE_SIZE = 20;
+
+export function TransactionsList() {
+  const { verdict, page = 1 } = useSearch({ from: "/" });
+  const navigate = useNavigate({ from: "/" });
+
+  const { data } = useSuspenseQuery(
+    qk.screeningList({ limit: PAGE_SIZE, verdict, page }),
+  );
+  const items = data.results;
   const total = data.total;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+
   const highCount = items.filter((t) => t.verdict === "BLOCK").length;
   const mediumCount = items.filter((t) => t.verdict === "REVIEW").length;
   const lowCount = items.filter((t) => t.verdict === "CLEAR").length;
   const firstReview = items.find((t) => t.verdict === "REVIEW");
+
+  const setVerdict = (v: Verdict | undefined) =>
+    navigate({ search: () => ({ verdict: v, page: 1 }) });
+
+  const setPage = (p: number) =>
+    navigate({ search: (prev) => ({ ...prev, page: p }) });
 
   return (
     <div className="min-h-dvh w-full bg-slate-50 p-6 text-slate-900">
       <style>{LIST_STYLES}</style>
       <div className="mx-auto flex max-w-[1600px] flex-col gap-6">
         <TopNav />
+
+        {/* Header */}
         <header className="ai-btn-premium relative overflow-hidden flex flex-col gap-6 rounded-2xl p-8 md:flex-row md:items-center md:justify-between">
           <div aria-hidden="true" className="ai-orb-top" />
           <div aria-hidden="true" className="ai-orb-left-mid" />
@@ -46,6 +69,7 @@ export function TransactionsList() {
           </div>
         </header>
 
+        {/* Smart Review CTA */}
         <section className="sokin-section relative overflow-hidden rounded-2xl p-8">
           <div aria-hidden="true" className="sokin-orb-top" />
           <div aria-hidden="true" className="sokin-orb-left" />
@@ -79,17 +103,61 @@ export function TransactionsList() {
           </div>
         </section>
 
+        {/* Table card */}
         <div
           className="rounded-2xl border border-[#1b2642] bg-white p-6"
           style={{ boxShadow: "inset 0 2px 16px 0 rgba(0,68,254,0.13)" }}
         >
-          <div className="mb-4 flex items-center justify-between">
+          {/* Table header row */}
+          <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-xl font-bold text-slate-800">All screening events</h2>
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-              Showing {items.length} / {total.toLocaleString()}
-            </span>
+
+            {/* Verdict filter pills */}
+            <div className="flex items-center gap-2">
+              {VERDICT_FILTERS.map(({ label, value }) => {
+                const isActive = verdict === value;
+                const color =
+                  value === "BLOCK" ? RISK_COLORS.high.solid
+                  : value === "REVIEW" ? RISK_COLORS.medium.solid
+                  : value === "CLEAR" ? RISK_COLORS.low.solid
+                  : "#64748b";
+                return (
+                  <button
+                    key={label}
+                    onClick={() => setVerdict(value)}
+                    className="rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wider transition-all"
+                    style={
+                      isActive
+                        ? { background: `${color}20`, color, border: `1px solid ${color}60` }
+                        : { background: "transparent", color: "#94a3b8", border: "1px solid #e2e8f0" }
+                    }
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
+          {/* Show count */}
+          <div className="mb-3 flex items-center justify-between">
+            <span className="text-xs font-semibold text-slate-400">
+              Page {page} of {totalPages || 1} · {total.toLocaleString()} total
+            </span>
+            {verdict && (
+              <span
+                className="rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider"
+                style={{
+                  background: `${verdict === "BLOCK" ? RISK_COLORS.high.solid : verdict === "REVIEW" ? RISK_COLORS.medium.solid : RISK_COLORS.low.solid}15`,
+                  color: verdict === "BLOCK" ? RISK_COLORS.high.solid : verdict === "REVIEW" ? RISK_COLORS.medium.solid : RISK_COLORS.low.solid,
+                }}
+              >
+                Filtered: {verdict}
+              </span>
+            )}
+          </div>
+
+          {/* Column headers */}
           <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">
             <div className="col-span-3">Screening</div>
             <div className="col-span-3">Account</div>
@@ -98,13 +166,15 @@ export function TransactionsList() {
             <div className="col-span-2 text-right">Verdict</div>
           </div>
 
+          {/* Items */}
           <motion.ul
             className="flex flex-col gap-2"
             initial="hidden"
             animate="visible"
+            key={`${verdict}-${page}`}
             variants={{
               hidden: {},
-              visible: { transition: { staggerChildren: 0.04 } },
+              visible: { transition: { staggerChildren: 0.03 } },
             }}
           >
             {items.map((t) => {
@@ -114,12 +184,12 @@ export function TransactionsList() {
                 <motion.li
                   key={t.screening_id}
                   variants={{
-                    hidden: { opacity: 0, y: 12, scale: 0.98 },
+                    hidden: { opacity: 0, y: 10, scale: 0.99 },
                     visible: {
                       opacity: 1,
                       y: 0,
                       scale: 1,
-                      transition: { duration: 0.35, ease: "easeOut" },
+                      transition: { duration: 0.28, ease: "easeOut" },
                     },
                   }}
                 >
@@ -166,13 +236,81 @@ export function TransactionsList() {
               );
             })}
           </motion.ul>
+
           {items.length === 0 && (
             <p className="py-12 text-center text-sm text-slate-500">No screening events found.</p>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-6 flex items-center justify-center gap-2">
+              <PaginationButton
+                onClick={() => setPage(page - 1)}
+                disabled={page <= 1}
+                label="← Prev"
+              />
+              {getPaginationRange(page, totalPages).map((p, i) =>
+                p === "…" ? (
+                  <span key={`ellipsis-${i}`} className="px-2 text-slate-400 text-sm">…</span>
+                ) : (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p as number)}
+                    className="h-9 w-9 rounded-lg text-sm font-semibold transition-all"
+                    style={
+                      p === page
+                        ? { background: "#0044fe", color: "white" }
+                        : { background: "transparent", color: "#64748b", border: "1px solid #e2e8f0" }
+                    }
+                  >
+                    {p}
+                  </button>
+                ),
+              )}
+              <PaginationButton
+                onClick={() => setPage(page + 1)}
+                disabled={page >= totalPages}
+                label="Next →"
+              />
+            </div>
           )}
         </div>
       </div>
     </div>
   );
+}
+
+function PaginationButton({
+  onClick,
+  disabled,
+  label,
+}: {
+  onClick: () => void;
+  disabled: boolean;
+  label: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition-all hover:border-[#0044fe] hover:text-[#0044fe] disabled:cursor-not-allowed disabled:opacity-40"
+    >
+      {label}
+    </button>
+  );
+}
+
+function getPaginationRange(current: number, total: number): (number | "…")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const pages: (number | "…")[] = [];
+  if (current <= 4) {
+    pages.push(1, 2, 3, 4, 5, "…", total);
+  } else if (current >= total - 3) {
+    pages.push(1, "…", total - 4, total - 3, total - 2, total - 1, total);
+  } else {
+    pages.push(1, "…", current - 1, current, current + 1, "…", total);
+  }
+  return pages;
 }
 
 function StatPill({ label, count, color }: { label: string; count: number; color: string }) {

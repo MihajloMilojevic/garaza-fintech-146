@@ -1,28 +1,41 @@
 {
   "model_name": "sanctions_screening_risk_threshold",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "trained_at": "2026-06-14",
-  "description": "Two-model XGBoost ensemble for sanctions screening. Produces per-account dynamic block and review thresholds based on risk profile, plus a BLOCK/REVIEW/CLEAR verdict when given a match score.",
-
+  "description": "v2: Two XGBoost regressors predict (t_block, t_review) directly. The v1 classifiers (model_binary.ubj, model_multiclass.ubj) are retained but DEPRECATED \u2014 not used in compute_thresholds() as of v2.",
   "thresholds": {
     "description": "Two dynamic thresholds are computed per account from overall_risk_score. The match_score from the screening system is then compared against them.",
     "formula": {
       "risk_adjustment": "(overall_risk_score - 50) * 0.5",
-      "t_block":  "clamp(75 - risk_adjustment, 40, 95)",
+      "t_block": "clamp(75 - risk_adjustment, 40, 95)",
       "t_review": "clamp(50 - risk_adjustment, 20, 70)"
     },
     "decision_zones": {
-      "BLOCK":  "match_score >= t_block  — automatic block, no human review",
-      "REVIEW": "t_review <= match_score < t_block  — routed to human analyst",
-      "CLEAR":  "match_score < t_review  — automatic pass"
+      "BLOCK": "match_score >= t_block  \u2014 automatic block, no human review",
+      "REVIEW": "t_review <= match_score < t_block  \u2014 routed to human analyst",
+      "CLEAR": "match_score < t_review  \u2014 automatic pass"
     },
     "examples": [
-      {"overall_risk_score": 10,  "t_block": 95.0, "t_review": 70.0, "note": "very low-risk: almost nothing can block"},
-      {"overall_risk_score": 50,  "t_block": 75.0, "t_review": 50.0, "note": "neutral: same as static baseline"},
-      {"overall_risk_score": 90,  "t_block": 55.0, "t_review": 30.0, "note": "high-risk: triggers easily"}
+      {
+        "overall_risk_score": 10,
+        "t_block": 95.0,
+        "t_review": 70.0,
+        "note": "very low-risk: almost nothing can block"
+      },
+      {
+        "overall_risk_score": 50,
+        "t_block": 75.0,
+        "t_review": 50.0,
+        "note": "neutral: same as static baseline"
+      },
+      {
+        "overall_risk_score": 90,
+        "t_block": 55.0,
+        "t_review": 30.0,
+        "note": "high-risk: triggers easily"
+      }
     ]
   },
-
   "models": {
     "binary": {
       "file": "model_binary.ubj",
@@ -30,47 +43,169 @@
       "task": "Detect BLOCK vs not-BLOCK. Positive class = BLOCK.",
       "cv_roc_auc": 0.9999,
       "cv_f1_block": 0.961,
-      "scale_pos_weight": 424.5
+      "scale_pos_weight": 424.5,
+      "status": "DEPRECATED as of v2 \u2014 kept for reference"
     },
     "multiclass": {
       "file": "model_multiclass.ubj",
       "objective": "multi:softprob",
-      "classes": ["BLOCK", "CLEAR", "REVIEW"],
+      "classes": [
+        "BLOCK",
+        "CLEAR",
+        "REVIEW"
+      ],
       "task": "Three-class verdict. Preferred for final decision output.",
-      "cv_macro_f1": 0.9964
+      "cv_macro_f1": 0.9964,
+      "status": "DEPRECATED as of v2 \u2014 kept for reference"
     }
   },
-
   "input_features": [
-    {"name": "account_type_enc",            "type": "int",   "encoding": "individual=0, business=1"},
-    {"name": "kyc_completeness",             "type": "float", "range": [0.0, 1.0]},
-    {"name": "kyc_status_enc",              "type": "int",   "encoding": "complete=0, partial=1, pending=2, expired=3"},
-    {"name": "is_pep",                       "type": "int",   "encoding": "0 or 1"},
-    {"name": "has_complex_ownership",        "type": "int",   "encoding": "0 or 1"},
-    {"name": "shell_company_flag",           "type": "int",   "encoding": "0 or 1"},
-    {"name": "activity_tier_enc",           "type": "int",   "encoding": "low=0, medium=1, high=2"},
-    {"name": "account_status_enc",          "type": "int",   "encoding": "active=0, suspended=1, closed=2"},
-    {"name": "match_score",                  "type": "float", "range": [0.0, 100.0], "source": "screening system (Jaro-Winkler or equivalent, scaled 0-100)"},
-    {"name": "shares_address_with_sanctioned","type": "int",  "encoding": "0 or 1"},
-    {"name": "pep_exposure_score",           "type": "float", "range": [0.0, 100.0]},
-    {"name": "country_risk_score",           "type": "float", "range": [0.0, 100.0], "source": "country_risk.csv composite score"},
-    {"name": "geographic_risk",              "type": "float", "range": [0.0, 100.0], "source": "risk score component"},
-    {"name": "identity_kyc_risk",            "type": "float", "range": [0.0, 100.0], "source": "risk score component"},
-    {"name": "pep_sanctions_risk",           "type": "float", "range": [0.0, 100.0], "source": "risk score component — highest importance (0.84)"},
-    {"name": "behavioural_risk",             "type": "float", "range": [0.0, 100.0], "source": "risk score component"},
-    {"name": "relationship_network_risk",    "type": "float", "range": [0.0, 100.0], "source": "risk score component"},
-    {"name": "overall_risk_score",           "type": "float", "range": [0.0, 100.0], "note": "ALSO drives threshold calculation — must be computed first"},
-    {"name": "override_applied",             "type": "int",   "encoding": "0 or 1"}
+    {
+      "name": "account_type_enc",
+      "type": "int",
+      "encoding": "individual=0, business=1"
+    },
+    {
+      "name": "kyc_completeness",
+      "type": "float",
+      "range": [
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "name": "kyc_status_enc",
+      "type": "int",
+      "encoding": "complete=0, partial=1, pending=2, expired=3"
+    },
+    {
+      "name": "is_pep",
+      "type": "int",
+      "encoding": "0 or 1"
+    },
+    {
+      "name": "has_complex_ownership",
+      "type": "int",
+      "encoding": "0 or 1"
+    },
+    {
+      "name": "shell_company_flag",
+      "type": "int",
+      "encoding": "0 or 1"
+    },
+    {
+      "name": "activity_tier_enc",
+      "type": "int",
+      "encoding": "low=0, medium=1, high=2"
+    },
+    {
+      "name": "account_status_enc",
+      "type": "int",
+      "encoding": "active=0, suspended=1, closed=2"
+    },
+    {
+      "name": "match_score",
+      "type": "float",
+      "range": [
+        0.0,
+        100.0
+      ],
+      "source": "screening system (Jaro-Winkler or equivalent, scaled 0-100)"
+    },
+    {
+      "name": "shares_address_with_sanctioned",
+      "type": "int",
+      "encoding": "0 or 1"
+    },
+    {
+      "name": "pep_exposure_score",
+      "type": "float",
+      "range": [
+        0.0,
+        100.0
+      ]
+    },
+    {
+      "name": "country_risk_score",
+      "type": "float",
+      "range": [
+        0.0,
+        100.0
+      ],
+      "source": "country_risk.csv composite score"
+    },
+    {
+      "name": "geographic_risk",
+      "type": "float",
+      "range": [
+        0.0,
+        100.0
+      ],
+      "source": "risk score component"
+    },
+    {
+      "name": "identity_kyc_risk",
+      "type": "float",
+      "range": [
+        0.0,
+        100.0
+      ],
+      "source": "risk score component"
+    },
+    {
+      "name": "pep_sanctions_risk",
+      "type": "float",
+      "range": [
+        0.0,
+        100.0
+      ],
+      "source": "risk score component \u2014 highest importance (0.84)"
+    },
+    {
+      "name": "behavioural_risk",
+      "type": "float",
+      "range": [
+        0.0,
+        100.0
+      ],
+      "source": "risk score component"
+    },
+    {
+      "name": "relationship_network_risk",
+      "type": "float",
+      "range": [
+        0.0,
+        100.0
+      ],
+      "source": "risk score component"
+    },
+    {
+      "name": "overall_risk_score",
+      "type": "float",
+      "range": [
+        0.0,
+        100.0
+      ],
+      "note": "ALSO drives threshold calculation \u2014 must be computed first"
+    },
+    {
+      "name": "override_applied",
+      "type": "int",
+      "encoding": "0 or 1"
+    }
   ],
-
   "output_schema": {
     "verdict": "BLOCK | REVIEW | CLEAR",
-    "t_block": "float — block threshold for this account",
-    "t_review": "float — review threshold for this account",
-    "match_score": "float — echo of input match_score",
-    "overall_risk_score": "float — echo of input overall_risk_score",
-    "block_probability": "float — P(BLOCK) from binary model",
-    "class_probabilities": {"BLOCK": "float", "CLEAR": "float", "REVIEW": "float"},
+    "t_block": "float \u2014 block threshold for this account",
+    "t_review": "float \u2014 review threshold for this account",
+    "match_score": "float \u2014 echo of input match_score",
+    "overall_risk_score": "float \u2014 echo of input overall_risk_score",
+    "block_probability": "float \u2014 P(BLOCK) from binary model",
+    "class_probabilities": {
+      "BLOCK": "float",
+      "CLEAR": "float",
+      "REVIEW": "float"
+    },
     "risk_components": {
       "geographic_risk": "float",
       "identity_kyc_risk": "float",
@@ -79,12 +214,18 @@
       "relationship_network_risk": "float"
     },
     "feature_contributions": [
-      {"feature": "string", "importance": "float", "value": "float", "contribution_pct": "float"}
+      {
+        "feature": "string",
+        "importance": "float",
+        "value": "float",
+        "contribution_pct": "float"
+      }
     ],
-    "audit_narrative": "string — human-readable explanation of the decision",
-    "audit_factors": ["string — top contributing factor sentences"]
+    "audit_narrative": "string \u2014 human-readable explanation of the decision",
+    "audit_factors": [
+      "string \u2014 top contributing factor sentences"
+    ]
   },
-
   "feature_importances_binary": {
     "pep_sanctions_risk": 0.838,
     "match_score": 0.123,
@@ -98,5 +239,146 @@
     "match_score": 0.065,
     "override_applied": 0.057,
     "kyc_completeness": 0.052
+  },
+  "threshold_regressor": {
+    "files": {
+      "block": "model_threshold_regressor_block.ubj",
+      "review": "model_threshold_regressor_review.ubj"
+    },
+    "approach": "Two separate XGBRegressors, one per target",
+    "noise_labels": {
+      "seed": 42,
+      "sigma_block": 4.0,
+      "sigma_review": 3.5,
+      "clamp_block": [
+        10.0,
+        95.0
+      ],
+      "clamp_review": [
+        5.0,
+        95.0
+      ],
+      "note": "Applied in script 12_add_threshold_noise.py \u2014 labels are noisy to make the regression target non-trivial"
+    },
+    "post_predict_clamps": {
+      "t_block": [
+        10.0,
+        95.0
+      ],
+      "t_review": [
+        5.0,
+        95.0
+      ],
+      "ordering": "t_review forced < t_block if needed"
+    },
+    "cv_5fold": {
+      "t_block": {
+        "mae": 2.8534,
+        "rmse": 3.54,
+        "r2": 0.7913
+      },
+      "t_review": {
+        "mae": 2.8123,
+        "rmse": 3.5345,
+        "r2": 0.8027
+      }
+    },
+    "feature_order": [
+      "account_type_enc",
+      "kyc_completeness",
+      "kyc_status_enc",
+      "is_pep",
+      "has_complex_ownership",
+      "shell_company_flag",
+      "activity_tier_enc",
+      "account_status_enc",
+      "shares_address_with_sanctioned",
+      "pep_exposure_score",
+      "country_risk_score",
+      "geographic_risk",
+      "identity_kyc_risk",
+      "pep_sanctions_risk",
+      "behavioural_risk",
+      "relationship_network_risk",
+      "overall_risk_score",
+      "override_applied",
+      "has_transaction",
+      "amount_log",
+      "payment_rail_enc",
+      "is_first_time_recipient",
+      "velocity_30d_count",
+      "velocity_30d_amount_log",
+      "hour_of_day",
+      "day_of_week"
+    ],
+    "feature_importances_block": {
+      "overall_risk_score": 0.389,
+      "override_applied": 0.2658,
+      "pep_sanctions_risk": 0.1689,
+      "geographic_risk": 0.0445,
+      "has_complex_ownership": 0.0366,
+      "identity_kyc_risk": 0.0165,
+      "behavioural_risk": 0.0156,
+      "kyc_completeness": 0.0105,
+      "is_pep": 0.004,
+      "relationship_network_risk": 0.0036,
+      "is_first_time_recipient": 0.0035,
+      "country_risk_score": 0.0035,
+      "account_status_enc": 0.0034,
+      "amount_log": 0.0031,
+      "velocity_30d_amount_log": 0.0029,
+      "pep_exposure_score": 0.0029,
+      "activity_tier_enc": 0.0029,
+      "account_type_enc": 0.0028,
+      "hour_of_day": 0.0028,
+      "kyc_status_enc": 0.0027,
+      "day_of_week": 0.0027,
+      "velocity_30d_count": 0.0027,
+      "shares_address_with_sanctioned": 0.0026,
+      "payment_rail_enc": 0.0025,
+      "shell_company_flag": 0.0023,
+      "has_transaction": 0.0016
+    },
+    "feature_importances_review": {
+      "overall_risk_score": 0.328,
+      "override_applied": 0.3217,
+      "pep_sanctions_risk": 0.1551,
+      "has_complex_ownership": 0.0492,
+      "geographic_risk": 0.0449,
+      "identity_kyc_risk": 0.0215,
+      "behavioural_risk": 0.0182,
+      "kyc_status_enc": 0.0108,
+      "kyc_completeness": 0.0064,
+      "is_pep": 0.0045,
+      "country_risk_score": 0.0031,
+      "relationship_network_risk": 0.003,
+      "is_first_time_recipient": 0.003,
+      "shell_company_flag": 0.0028,
+      "activity_tier_enc": 0.0026,
+      "velocity_30d_amount_log": 0.0026,
+      "amount_log": 0.0026,
+      "pep_exposure_score": 0.0025,
+      "account_status_enc": 0.0024,
+      "day_of_week": 0.0024,
+      "hour_of_day": 0.0023,
+      "payment_rail_enc": 0.0023,
+      "account_type_enc": 0.0022,
+      "shares_address_with_sanctioned": 0.0021,
+      "velocity_30d_count": 0.002,
+      "has_transaction": 0.0019
+    },
+    "model_params": {
+      "n_estimators": 400,
+      "max_depth": 5,
+      "learning_rate": 0.05,
+      "subsample": 0.8,
+      "colsample_bytree": 0.8,
+      "min_child_weight": 5,
+      "reg_alpha": 0.1,
+      "reg_lambda": 1.0,
+      "random_state": 42,
+      "n_jobs": -1,
+      "tree_method": "hist"
+    }
   }
 }

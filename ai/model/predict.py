@@ -391,9 +391,9 @@ def _build_narrative(
     threshold_reasons: list[str],
 ) -> tuple[str, list[str]]:
     zone_desc = {
-        "BLOCK":  f"match score {match_score:.1f} ≥ block threshold {t_block:.1f} → automatic block",
-        "REVIEW": f"match score {match_score:.1f} is between review threshold {t_review:.1f} and block threshold {t_block:.1f} → routed to human analyst",
-        "CLEAR":  f"match score {match_score:.1f} < review threshold {t_review:.1f} → automatic pass",
+        "BLOCK":  f"match score {match_score:.1f} >= block threshold {t_block:.1f} -- automatic block",
+        "REVIEW": f"match score {match_score:.1f} is between review threshold {t_review:.1f} and block threshold {t_block:.1f} -- routed to human analyst",
+        "CLEAR":  f"match score {match_score:.1f} < review threshold {t_review:.1f} -- automatic pass",
     }
     adj_desc = "lowered" if overall_risk > 50 else "raised"
     risk_dir  = "high" if overall_risk > 50 else "low"
@@ -402,7 +402,7 @@ def _build_narrative(
         f"Verdict: {verdict}. "
         f"The XGBoost threshold model predicted block threshold {t_block:.1f} and "
         f"review threshold {t_review:.1f} for this account (overall risk "
-        f"{overall_risk:.1f}/100 — {risk_dir} risk, thresholds {adj_desc} relative "
+        f"{overall_risk:.1f}/100 - {risk_dir} risk, thresholds {adj_desc} relative "
         f"to the 75/50 neutral baseline). "
         f"The screening system produced a match score of {match_score:.1f}/100. "
         f"{zone_desc[verdict]}."

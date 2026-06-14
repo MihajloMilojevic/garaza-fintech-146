@@ -93,7 +93,7 @@ export function TransactionsList() {
                 params={{ id: firstReview.screening_id }}
                 className="inline-flex items-center justify-center rounded-xl bg-white px-6 py-4 text-sm font-bold uppercase tracking-wider text-slate-900 transition-all hover:bg-slate-100 hover:shadow-[0_8px_32px_-8px_rgba(255,255,255,0.4)]"
               >
-                Start Review →
+                Start Review &rarr;
               </Link>
             ) : (
               <span className="inline-flex items-center justify-center rounded-xl bg-white/10 px-6 py-4 text-sm font-bold uppercase tracking-wider text-slate-400">

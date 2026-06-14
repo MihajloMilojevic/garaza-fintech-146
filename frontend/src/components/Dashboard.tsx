@@ -6,7 +6,7 @@ import { useSuspenseQuery, useQuery, useMutation } from "@tanstack/react-query";
 import { GraphPanel, RISK_COLORS, type GraphNode, type Edge } from "./GraphPanel";
 import { TopNav } from "./TopNav";
 import { qk } from "@/lib/api/queries";
-import { verdictToRisk, type TransactionGraphNode, type LlmReview, apiClient } from "@/lib/api/client";
+import { verdictToRisk, type TransactionGraphNode, type LlmReview, type Verdict, apiClient } from "@/lib/api/client";
 
 // ─── Risk helpers ────────────────────────────────────────────────────────────
 
@@ -33,14 +33,14 @@ function mapBackendNode(
   switch (n.type) {
     case "source":
       risk = riskBandToLevel(n.risk_band);
-      riskScore = Math.round((n.overall_risk_score ?? 0) * 100);
+      riskScore = Math.round(n.overall_risk_score ?? 0);
       country = n.country_residence ?? "—";
       value = n.id;
       type = "Source Account";
       break;
     case "account":
       risk = n.latest_verdict ? verdictToRisk(n.latest_verdict) : riskBandToLevel(n.risk_band);
-      riskScore = Math.round((n.overall_risk_score ?? 0) * 100);
+      riskScore = Math.round(n.overall_risk_score ?? 0);
       country = n.country_residence ?? "—";
       value = n.id;
       type = "Account";
@@ -146,9 +146,9 @@ function buildGraphEdges(
 
 // ─── Score/badge helpers ──────────────────────────────────────────────────────
 
-function getBadgeStyle(score: number): { label: string; bg: string } {
-  if (score >= 75) return { label: "High Risk", bg: "linear-gradient(135deg, #f87171, #dc2626)" };
-  if (score >= 40) return { label: "For Review", bg: "linear-gradient(135deg, #fbbf24, #d97706)" };
+function getVerdictBadgeStyle(verdict: Verdict): { label: string; bg: string } {
+  if (verdict === "BLOCK") return { label: "High Risk", bg: "linear-gradient(135deg, #f87171, #dc2626)" };
+  if (verdict === "REVIEW") return { label: "For Review", bg: "linear-gradient(135deg, #fbbf24, #d97706)" };
   return { label: "Low Risk", bg: "linear-gradient(135deg, #34d399, #059669)" };
 }
 
@@ -228,7 +228,6 @@ export function Dashboard({ screeningId }: { screeningId: string }) {
     mutationFn: () => apiClient.llmReview(screeningId),
   });
 
-  const blockPct = Math.round((screening.block_probability ?? 0) * 100);
   const isReview = screening.verdict === "REVIEW";
 
   return (
@@ -252,29 +251,29 @@ export function Dashboard({ screeningId }: { screeningId: string }) {
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-3 pt-1">
-              <RiskBadge score={blockPct} decision={decisionForScreening} />
+              <RiskBadge verdict={screening.verdict} matchScore={screening.match_score} decision={decisionForScreening} />
               <Link
                 to="/accounts/$id"
                 params={{ id: screening.account_id }}
                 className="font-mono text-base font-semibold text-slate-300 hover:text-white transition-colors"
               >
-                {screening.account_id} →
+                {screening.account_id} &rarr;
               </Link>
             </div>
           </div>
 
           <div className="relative z-20 flex flex-wrap items-center gap-3">
             {decisionForScreening === "approve" || (screening.verdict === "CLEAR" && !decisionForScreening) ? (
-              <RiskBadge score={blockPct} decision="approve" />
+              <RiskBadge verdict={screening.verdict} matchScore={screening.match_score} decision="approve" />
             ) : decisionForScreening === "block" || screening.verdict === "BLOCK" ? (
-              <RiskBadge score={blockPct} decision="block" />
+              <RiskBadge verdict={screening.verdict} matchScore={screening.match_score} decision="block" />
             ) : nextReview ? (
               <Link
                 to="/transactions/$id"
                 params={{ id: nextReview.screening_id }}
                 className="inline-flex items-center gap-2 rounded-xl bg-amber-500/15 px-6 py-3 text-base font-bold text-amber-400 ring-1 ring-amber-500/30 transition-colors hover:bg-amber-500/25"
               >
-                Next →
+                Next &rarr;
               </Link>
             ) : null}
           </div>
@@ -446,20 +445,22 @@ function Metric({ label, value }: { label: string; value: string }) {
 }
 
 function RiskBadge({
-  score,
+  verdict,
+  matchScore,
   decision,
 }: {
-  score: number;
+  verdict: Verdict;
+  matchScore: number;
   decision?: "approve" | "block";
 }) {
-  const { label, bg } = decision ? getDecisionBadgeStyle(decision) : getBadgeStyle(score);
+  const { label, bg } = decision ? getDecisionBadgeStyle(decision) : getVerdictBadgeStyle(verdict);
   return (
     <span
       className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-bold uppercase tracking-wider text-white"
       style={{ background: bg, boxShadow: "inset 0 1px 8px 0 rgba(0,68,254,0.22)" }}
     >
       <span className="h-2 w-2 rounded-full bg-white/90 animate-pulse" />
-      {decision ? label : `${label} · ${score}%`}
+      {decision ? label : `${label} \u00b7 ${matchScore.toFixed(1)}`}
     </span>
   );
 }
